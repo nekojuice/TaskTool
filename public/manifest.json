@@ -1,8 +1,11 @@
 {
     "manifest_version": 3,
-    "name": "Vue 3 Browser Extension",
+    "name": "nkjTaskTool",
     "version": "1.0",
-    "description": "A browser extension built with Vue 3",
+    "description": "for work",
+    "icons": {
+        "128": "icons/chick128x128.png"
+    },
     "action": {
         "default_popup": "index.html"
     },

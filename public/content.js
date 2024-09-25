@@ -1,1 +1,1 @@
-console.log('Content script loaded')
+console.log('nkjtasktool 已啟動')
