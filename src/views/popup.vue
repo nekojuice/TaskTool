@@ -19,13 +19,17 @@
           <label for="taskId">編號</label>
           <InputNumber id="taskId" v-model="_data.id" inputClass="w-full" :min="0" size="small" />
         </div>
-        <div class="col-10">
+        <div class="col-9">
           <label for="taskHeader">標題</label>
           <InputText id="taskHeader" class="w-full" type="text" v-model="_data.taskHeader" @change="saveCache()" />
         </div>
         <div class="col-1">
-          <label>修改</label>
-          <Button icon="pi pi-plus" severity="success" outlined raised @click="saveTaskInfo()" />
+          <label>新增</label>
+          <Button icon="pi pi-plus" outlined raised @click="newTask()" />
+        </div>
+        <div class="col-1">
+          <label>儲存</label>
+          <Button icon="pi pi-save" severity="success" outlined raised @click="saveTaskInfo()" />
         </div>
         <div class="col-6">
           <label for="taskUrl">連結</label>
@@ -56,7 +60,7 @@
             </div>
             <div class="col-1">
               <label>加入</label>
-              <Button icon="pi pi-plus" severity="success" outlined raised @click="saveTime" />
+              <Button icon="pi pi-save" severity="success" outlined raised @click="saveTime" />
             </div>
             <Slider :class="'mt-1 col-12'" v-model="_period" range :step="1" :max="1441" class="w-full" />
           </div>
@@ -144,6 +148,27 @@ const deleteAllData = () => {
 const openInNewTab = () => {
   window.open('/index.html', '_blank')
 }
+const newTask = () => {
+  if (!_tasks.value.filter((t) => t.id == _data.value.id).length) {
+    return
+  }
+
+  let maxId = 0
+
+  if (_data.value.length === 0) {
+    maxId = 0
+  } else {
+    maxId = Math.max(_tasks.value.map((item) => item.id)) + 1
+  }
+
+  _data.value = {
+    id: _data.value.id + 1,
+    taskHeader: '',
+    taskUrl: '',
+    taskBranch: '',
+    times: []
+  }
+}
 const saveTaskInfo = () => {
   const index = _tasks.value.findIndex((t) => t.id == _data.value.id)
 
@@ -152,6 +177,8 @@ const saveTaskInfo = () => {
   } else {
     _tasks.value.push({ ..._data.value })
   }
+
+  saveTasks()
 }
 
 // TODO
@@ -166,15 +193,7 @@ const saveTime = () => {
     _data.value.times.push({ ..._time.value })
 
     if (taskIndex == -1) {
-      const newId =
-        Math.max(
-          _tasks.value.map((obj) => obj.id),
-          0
-        ) + 1 ?? 0
-      _data.value.id = newId
-      const newTask = { ..._data.value }
-
-      _tasks.value.push(newTask)
+      _tasks.value.push({ ..._data.value })
     }
   } else {
     const mergedPeriod = processWorkPeriods([..._tasks.value[taskIndex].times[timeIndex].periods, [..._period.value]])
