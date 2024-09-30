@@ -72,7 +72,7 @@
           <div v-for="task in _tasks">
             <label class="mr-2">#{{ task.id }}</label>
             <Button class="mr-2 w-5rem" @click="_data = { ...task }">{{ task.taskHeader }}</Button>
-            <!-- <label class="mr-2">({{ calEffort(task.data.time) }})</label> -->
+            <label class="mr-2">({{ calEffort(task.times) }})</label>
           </div>
         </div>
       </div>
@@ -158,7 +158,7 @@ const newTask = () => {
   if (_data.value.length === 0) {
     maxId = 0
   } else {
-    maxId = Math.max(..._tasks.value.map((item) => item.id)) 
+    maxId = Math.max(..._tasks.value.map((item) => item.id))
   }
 
   _data.value = {
@@ -194,6 +194,8 @@ const saveTime = () => {
 
     if (taskIndex == -1) {
       _tasks.value.push({ ..._data.value })
+    } else {
+      _tasks.value[taskIndex].times = _data.value.times
     }
   } else {
     const mergedPeriod = processWorkPeriods([..._tasks.value[taskIndex].times[timeIndex].periods, [..._period.value]])
@@ -245,20 +247,16 @@ function processWorkPeriods(workPeriods) {
   return result
 }
 
-const calEffort = (timearr) => {
-  let totalMinutes = 0
+const calEffort = (workData) => {
+  let totalMinutes = workData.reduce((totalMinutes, day) => {
+    const dayMinutes = day.periods.reduce((dayTotal, period) => {
+      const [start, end] = period
+      return dayTotal + (end - start)
+    }, 0)
+    return totalMinutes + dayMinutes
+  }, 0)
 
-  timearr.forEach((dayObj) => {
-    Object.values(dayObj).forEach((timeRanges) => {
-      timeRanges.forEach((range) => {
-        const [start, end] = range
-        totalMinutes += end - start
-      })
-    })
-  })
-
-  // 計算人日，1 人日 = 60 分鐘 * 0.125
-  const personDays = (totalMinutes / 60) * 0.125
+  const personDays = Math.ceil(totalMinutes / 60) * 0.125
 
   return personDays
 }
