@@ -68,12 +68,17 @@
 
         <Divider />
 
-        <div class="col-12">
+        <div class="col-6">
           <div v-for="task in _tasks">
+            <!-- TODO: 編輯順序 -->
             <label class="mr-2">#{{ task.id }}</label>
-            <Button class="mr-2 w-5rem" @click="_data = { ...task }">{{ task.taskHeader }}</Button>
+            <Button class="mr-2 w-10rem" @click="_data = { ...task }">{{ task.taskHeader }}</Button>
             <label class="mr-2">({{ calEffort(task.times) }})</label>
+            <!-- TODO: 刪除task -->
           </div>
+        </div>
+        <div class="col-6">
+          TODO: 編輯時段!
         </div>
       </div>
     </div>
