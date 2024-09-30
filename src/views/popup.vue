@@ -17,7 +17,7 @@
       <div class="grid">
         <div class="col-1">
           <label for="taskId">編號</label>
-          <InputNumber id="taskId" v-model="_data.id" inputClass="w-full" :min="0" size="small" />
+          <InputNumber id="taskId" v-model="_data.id" inputClass="w-full" :min="0" size="small" :disabled="true" />
         </div>
         <div class="col-9">
           <label for="taskHeader">標題</label>
@@ -29,7 +29,7 @@
         </div>
         <div class="col-1">
           <label>儲存</label>
-          <Button icon="pi pi-save" severity="success" outlined raised @click="saveTaskInfo()" />
+          <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader.trim()" />
         </div>
         <div class="col-6">
           <label for="taskUrl">連結</label>
@@ -60,7 +60,7 @@
             </div>
             <div class="col-1">
               <label>加入</label>
-              <Button icon="pi pi-save" severity="success" outlined raised @click="saveTime" />
+              <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTime" />
             </div>
             <Slider :class="'mt-1 col-12'" v-model="_period" range :step="1" :max="1441" class="w-full" />
           </div>
@@ -71,7 +71,7 @@
         <div class="col-12">
           <div v-for="task in _tasks">
             <label class="mr-2">#{{ task.id }}</label>
-            <Button class="mr-2 w-5rem">{{ task.taskHeader }}</Button>
+            <Button class="mr-2 w-5rem" @click="_data = { ...task }">{{ task.taskHeader }}</Button>
             <!-- <label class="mr-2">({{ calEffort(task.data.time) }})</label> -->
           </div>
         </div>
@@ -158,11 +158,11 @@ const newTask = () => {
   if (_data.value.length === 0) {
     maxId = 0
   } else {
-    maxId = Math.max(_tasks.value.map((item) => item.id)) + 1
+    maxId = Math.max(..._tasks.value.map((item) => item.id)) 
   }
 
   _data.value = {
-    id: _data.value.id + 1,
+    id: maxId + 1,
     taskHeader: '',
     taskUrl: '',
     taskBranch: '',
