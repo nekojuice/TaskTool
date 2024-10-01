@@ -86,7 +86,7 @@
             </div>
             <Slider class="mt-1 col-12" v-model="_period" range :step="1" :max="1441" />
             <br />
-            <Timeline class="col-12 p-0" :workTime="selectedDateTimeline?.periods" :restTime="[[710, 800]]"></Timeline>
+            <Timeline class="col-12 p-0" :workTime="selectedDateTimeline?.periods" :restTime="[[710, 800]]" :showScale="true"></Timeline>
           </div>
         </div>
 

@@ -19,13 +19,14 @@
         :style="getPeriodStyle(period, '#757575')"
       ></div>
     </div>
+    <div v-if="props.showScale" class="timeline-scale">
+      <div v-for="hour in getTimeMarks()" :key="hour" class="time-mark" :style="{ left: `${(hour / 24) * 100}%` }">{{ hour }}:00</div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-
-const props = defineProps(['modelValue', 'date', 'workTime', 'restTime'])
+const props = defineProps(['modelValue', 'date', 'workTime', 'restTime', 'showScale'])
 
 const getPeriodStyle = (period, color) => {
   const start = (period[0] / 1440) * 100
@@ -36,6 +37,14 @@ const getPeriodStyle = (period, color) => {
     width: `${duration}%`,
     backgroundColor: color
   }
+}
+
+const getTimeMarks = () => {
+  const marks = []
+  for (let i = 0; i <= 24; i += 2) {
+    marks.push(i)
+  }
+  return marks
 }
 </script>
 
@@ -52,5 +61,19 @@ const getPeriodStyle = (period, color) => {
   position: absolute;
   height: 100%;
   top: 0;
+}
+
+.timeline-scale {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  margin-top: 5px;
+}
+
+.time-mark {
+  position: absolute;
+  font-size: 12px;
+  color: #333;
+  transform: translateX(-50%);
 }
 </style>
