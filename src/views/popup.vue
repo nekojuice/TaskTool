@@ -3,8 +3,16 @@
     <div class="col-1 p-0 flex justify-content-center flex-wrap">
       <div class="w-2rem flex justify-content-center align-content-start flex-wrap">
         <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-ellipsis-v" severity="secondary" outlined @click="showStorageData()" />
-        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-window-maximize" severity="secondary" outlined @click="openInNewTab()" />
+        <Button
+          v-tooltip="'在新瀏覽器標籤開啟'"
+          class="h-2rem w-2rem flex align-items-center justify-content-center"
+          icon="pi pi-window-maximize"
+          severity="secondary"
+          outlined
+          @click="openInNewTab()"
+        />
         <FileUpload
+          v-tooltip="'上傳並覆蓋資料'"
           name="demo[]"
           mode="basic"
           auto
@@ -16,16 +24,16 @@
           @select="fileOnChange($event)"
         >
         </FileUpload>
-        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
+        <Button v-tooltip="'下載資料'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
         <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
       </div>
       <div class="w-2rem flex justify-content-center align-content-end flex-wrap">
         <div>DEBUG</div>
-        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" label="A" outlined @click="console.log('tasks', _tasks)" />
-        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" label="D" outlined @click="console.log('data', _data)" />
-        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" label="T" outlined @click="console.log('time', _time)" />
-        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" label="P" outlined @click="console.log('period', _period)" />
-        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-trash" severity="danger" outlined @click="deleteAllData()" />
+        <Button v-tooltip="'all tasks'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="A" outlined @click="console.log('tasks', _tasks)" />
+        <Button v-tooltip="'current data'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="D" outlined @click="console.log('data', _data)" />
+        <Button v-tooltip="'current data all times'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="T" outlined @click="console.log('time', _time)" />
+        <Button v-tooltip="'current period'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="P" outlined @click="console.log('period', _period)" />
+        <Button v-tooltip="'⚠️刪除所有資料'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-trash" severity="danger" outlined @click="deleteAllData()" />
       </div>
     </div>
     <div class="col-11">

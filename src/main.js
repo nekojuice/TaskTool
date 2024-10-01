@@ -10,6 +10,8 @@ import router from './router'
 
 import '@/assets/styles.scss';
 
+import Tooltip from 'primevue/tooltip';
+
 const app = createApp(App)
 
 app.use(createPinia())
@@ -30,5 +32,7 @@ app.use(PrimeVue, {
         monthNamesShort: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"]
     }
 });
+
+app.directive('tooltip', Tooltip);
 
 app.mount('#app')
