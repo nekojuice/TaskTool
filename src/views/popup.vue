@@ -3,14 +3,31 @@
     <div class="col-1 p-0 flex justify-content-center flex-wrap">
       <div class="w-2rem flex justify-content-center align-content-start flex-wrap">
         <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-ellipsis-v" severity="secondary" outlined @click="showStorageData()" />
+        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-window-maximize" severity="secondary" outlined @click="openInNewTab()" />
+        <FileUpload
+          name="demo[]"
+          mode="basic"
+          auto
+          customUpload
+          chooseIcon="pi pi-upload"
+          :chooseButtonProps="{ label: '', class: 'h-2rem w-2rem flex align-items-center justify-content-center', severity: 'danger', outlined: true }"
+          accept=".json"
+          :maxFileSize="1000000"
+          @select="fileOnChange($event)"
+        >
+        </FileUpload>
+
+        <!-- TODO 下載 -->
+        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadFile('json')" />
+        <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
+      </div>
+      <div class="w-2rem flex justify-content-center align-content-end flex-wrap">
+        <div>DEBUG</div>
         <Button class="h-2rem w-2rem flex align-items-center justify-content-center" label="A" outlined @click="console.log('tasks', _tasks)" />
         <Button class="h-2rem w-2rem flex align-items-center justify-content-center" label="D" outlined @click="console.log('data', _data)" />
         <Button class="h-2rem w-2rem flex align-items-center justify-content-center" label="T" outlined @click="console.log('time', _time)" />
         <Button class="h-2rem w-2rem flex align-items-center justify-content-center" label="P" outlined @click="console.log('period', _period)" />
-      </div>
-      <div class="w-2rem flex justify-content-center align-content-end flex-wrap">
         <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-trash" severity="danger" outlined @click="deleteAllData()" />
-        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-window-maximize" severity="secondary" outlined @click="openInNewTab()" />
       </div>
     </div>
     <div class="col-11">
@@ -70,7 +87,6 @@
 
         <Divider />
 
-        <!-- TODO: 編輯順序 -->
         <!-- TODO: 刪除task -->
         <div class="col-8">
           <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
@@ -99,17 +115,20 @@
 </template>
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
-import DatePicker from 'primevue/datepicker'
 import Slider from 'primevue/slider'
 import InputNumber from 'primevue/inputnumber'
 import Divider from 'primevue/divider'
-import { convertDateToString, convertStringToDate, deepMerge } from '../service/commonService'
-import InputTextDate from '@/components/InputTextDate.vue'
-import Timeline from '@/components/Timeline.vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import FileUpload from 'primevue/fileupload'
+
+import InputTextDate from '@/components/InputTextDate.vue'
+import Timeline from '@/components/Timeline.vue'
+
+import { convertDateToString } from '../service/commonService'
 
 onMounted(() => {
   loadCache()
@@ -377,6 +396,97 @@ const selectedDateTimeline = computed(() => {
 })
 
 const sortedTimelines = computed(() => _data.value.times.sort((a, b) => (a.date > b.date ? 1 : b.date > a.date ? -1 : 0)))
+
+async function fileOnChange(event) {
+  const file = event.files[0]
+
+  if (file && file.type === 'application/json') {
+    const reader = new FileReader()
+
+    reader.onload = (e) => {
+      try {
+        const jsonData = JSON.parse(e.target.result)
+        console.log('文件內容:', jsonData)
+
+        uploadJsonData(jsonData)
+      } catch (error) {
+        console.error('無法解析 JSON 文件:', error)
+      }
+    }
+
+    reader.onerror = (e) => {
+      console.error('文件讀取錯誤:', e)
+    }
+
+    reader.readAsText(file)
+  } else {
+    console.error('請上傳 JSON 文件')
+  }
+}
+
+const uploadJsonData = (json) => {
+  if (!validateTaskData(json)) {
+    return
+  }
+
+  _tasks.value = json
+  saveTasks()
+}
+
+function validateTaskData(tasks) {
+  if (!Array.isArray(tasks)) {
+    console.error('tasks 必須是 array')
+    return false
+  }
+
+  for (const task of tasks) {
+    if (typeof task.id !== 'number') {
+      console.error('id 必須是 number')
+      return false
+    }
+
+    if (typeof task.taskHeader !== 'string') {
+      console.error('taskHeader 必須是 string')
+      return false
+    }
+
+    if (typeof task.taskUrl !== 'string') {
+      console.error('taskUrl 必須是 string')
+      return false
+    }
+
+    if (typeof task.taskBranch !== 'string') {
+      console.error('taskBranch 必須是 string')
+      return false
+    }
+
+    if (!Array.isArray(task.times)) {
+      console.error('times 必須是 array')
+      return false
+    }
+
+    for (const time of task.times) {
+      if (typeof time.date !== 'string') {
+        console.error('date 必須是 string')
+        return false
+      }
+
+      if (!Array.isArray(time.periods)) {
+        console.error('periods 必須是 array')
+        return false
+      }
+
+      for (const period of time.periods) {
+        if (!Array.isArray(period) || period.length !== 2 || typeof period[0] !== 'number' || typeof period[1] !== 'number') {
+          console.error('每個 period 必須是 [number, number]')
+          return false
+        }
+      }
+    }
+  }
+
+  return true
+}
 </script>
 
 <style scoped></style>
