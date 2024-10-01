@@ -2,8 +2,22 @@
   <div>
     <span>{{ props.date }}</span>
     <div class="timeline">
-      <div v-for="period in props.workTime" :key="index" class="time-block" :style="getPeriodStyle(period, '#35B303')"></div>
-      <div v-for="period in props.restTime" :key="index" class="time-block" :style="getPeriodStyle(period, '#757575')"></div>
+      <div
+        v-for="period in props.workTime"
+        v-tooltip.bottom="
+          `${Math.floor(period[0] / 60)}:${period[0] % 60}-${Math.floor(period[1] / 60)}:${period[1] % 60} (${Math.floor((period[1] - period[0]) / 60)}h ${(period[1] - period[0]) % 60}min)`
+        "
+        :key="index"
+        class="time-block"
+        :style="getPeriodStyle(period, '#35B303')"
+      ></div>
+      <div
+        v-for="period in props.restTime"
+        v-tooltip.bottom="`午休${Math.floor(period[0] / 60)}:${period[0] % 60}-${Math.floor(period[1] / 60)}:${period[1] % 60}`"
+        :key="index"
+        class="time-block"
+        :style="getPeriodStyle(period, '#757575')"
+      ></div>
     </div>
   </div>
 </template>
