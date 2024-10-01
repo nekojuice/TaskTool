@@ -62,23 +62,36 @@
               <label>加入</label>
               <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTime" />
             </div>
-            <Slider :class="'mt-1 col-12'" v-model="_period" range :step="1" :max="1441" class="w-full" />
+            <Slider class="mt-1 col-12" v-model="_period" range :step="1" :max="1441" />
+            <br />
+            <Timeline class="col-12 p-0" :workTime="selectedDateTimeline?.periods" :restTime="[[710, 800]]"></Timeline>
           </div>
         </div>
 
         <Divider />
 
-        <div class="col-6">
-          <div v-for="task in _tasks">
-            <!-- TODO: 編輯順序 -->
-            <label class="mr-2">#{{ task.id }}</label>
-            <Button class="mr-2 w-10rem" @click="_data = { ...task }">{{ task.taskHeader }}</Button>
-            <label class="mr-2">({{ calEffort(task.times) }})</label>
-            <!-- TODO: 刪除task -->
-          </div>
+        <!-- TODO: 編輯順序 -->
+        <!-- TODO: 刪除task -->
+        <div class="col-8">
+          <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
+            <Column rowReorder />
+            <Column field="id" header="id"></Column>
+            <Column field="taskHeader" header="標題">
+              <template #body="slotProps">
+                <Button class="max-w-8rem justify-content-start white-space-nowrap overflow-hidden text-overflow-ellipsis" @click="_data = { ...slotProps.data }">{{
+                  slotProps.data.taskHeader
+                }}</Button>
+              </template>
+            </Column>
+            <Column field="effort" header="effort">
+              <template #body="slotProps">
+                {{ calEffort(slotProps.data.times) }}
+              </template>
+            </Column>
+          </DataTable>
         </div>
-        <div class="col-6">
-          TODO: 編輯時段!
+        <div class="col-4">
+          <Timeline v-for="day in sortedTimelines" :date="day.date" :workTime="day.periods" :restTime="[[710, 800]]"></Timeline>
         </div>
       </div>
     </div>
@@ -94,6 +107,9 @@ import InputNumber from 'primevue/inputnumber'
 import Divider from 'primevue/divider'
 import { convertDateToString, convertStringToDate, deepMerge } from '../service/commonService'
 import InputTextDate from '@/components/InputTextDate.vue'
+import Timeline from '@/components/Timeline.vue'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
 
 onMounted(() => {
   loadCache()
@@ -102,7 +118,6 @@ onMounted(() => {
 
 const _tasks = ref([])
 
-// const _id = ref(0)
 const _data = ref({
   id: 0,
   taskHeader: '',
@@ -252,6 +267,13 @@ function processWorkPeriods(workPeriods) {
   return result
 }
 
+const onRowReorder = (event) => {
+  const reorderedTasks = event.value
+  _tasks.value = reorderedTasks
+
+  saveTaskInfo()
+}
+
 const calEffort = (workData) => {
   let totalMinutes = workData.reduce((totalMinutes, day) => {
     const dayMinutes = day.periods.reduce((dayTotal, period) => {
@@ -337,6 +359,12 @@ watch(
     }
   }
 )
+
+const selectedDateTimeline = computed(() => {
+  return _data.value.times.filter((t) => t.date == _time.value.date)[0]
+})
+
+const sortedTimelines = computed(() => _data.value.times.sort((a, b) => (a.date > b.date ? 1 : b.date > a.date ? -1 : 0)))
 </script>
 
 <style scoped></style>
