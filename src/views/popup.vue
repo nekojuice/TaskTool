@@ -28,11 +28,10 @@
         <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
       </div>
       <div class="w-2rem flex justify-content-center align-content-end flex-wrap">
-        <div>DEBUG</div>
-        <Button v-tooltip="'all tasks'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="A" outlined @click="console.log('tasks', _tasks)" />
-        <Button v-tooltip="'current data'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="D" outlined @click="console.log('data', _data)" />
-        <Button v-tooltip="'current data all times'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="T" outlined @click="console.log('time', _time)" />
-        <Button v-tooltip="'current period'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="P" outlined @click="console.log('period', _period)" />
+        <Button v-tooltip="'DEBUG, all tasks'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="A" outlined @click="console.log('tasks', _tasks)" />
+        <Button v-tooltip="'DEBUG, current data'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="D" outlined @click="console.log('data', _data)" />
+        <Button v-tooltip="'DEBUG, current data all times'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="T" outlined @click="console.log('time', _time)" />
+        <Button v-tooltip="'DEBUG, current period'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="P" outlined @click="console.log('period', _period)" />
         <Button v-tooltip="'⚠️刪除所有資料'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-trash" severity="danger" outlined @click="deleteAllData()" />
       </div>
     </div>
@@ -97,10 +96,10 @@
         <div class="col-8">
           <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
             <Column rowReorder />
-            <Column field="id" header="id"></Column>
+            <!-- <Column field="id" header="id"></Column> -->
             <Column field="taskHeader" header="標題">
               <template #body="slotProps">
-                <Button class="max-w-8rem justify-content-start white-space-nowrap overflow-hidden text-overflow-ellipsis" @click="_data = { ...slotProps.data }">{{
+                <Button class="max-w-10rem justify-content-start white-space-nowrap overflow-hidden text-overflow-ellipsis" @click="_data = { ...slotProps.data }">{{
                   slotProps.data.taskHeader
                 }}</Button>
               </template>
@@ -113,6 +112,7 @@
           </DataTable>
         </div>
         <div class="col-4">
+          <span v-if="!sortedTimelines.length">任務: {{ _data.taskHeader }}<br />目前沒有時數紀錄</span>
           <Timeline v-for="day in sortedTimelines" :date="day.date" :workTime="day.periods" :restTime="[[710, 800]]"></Timeline>
         </div>
       </div>
@@ -246,7 +246,8 @@ const saveTime = () => {
   console.log('timeIndex', timeIndex)
 
   if (timeIndex == -1) {
-    _time.value.periods.push([..._period.value])
+    _time.value.periods = removeLaunchPeriod([..._period.value])
+
     _data.value.times.push({ ..._time.value })
 
     if (taskIndex == -1) {
@@ -300,6 +301,23 @@ function processWorkPeriods(workPeriods) {
       result.push([start, end])
     }
   })
+
+  return result
+}
+
+const removeLaunchPeriod = ([start, end]) => {
+  const lunchBreakStart = 710
+  const lunchBreakEnd = 800
+  const result = []
+
+  if (start < lunchBreakStart && end > lunchBreakEnd) {
+    result.push([start, lunchBreakStart], [lunchBreakEnd, end])
+  } else if (end > lunchBreakStart && start < lunchBreakEnd) {
+    if (start < lunchBreakStart) result.push([start, lunchBreakStart])
+    if (end > lunchBreakEnd) result.push([lunchBreakEnd, end])
+  } else {
+    result.push([start, end])
+  }
 
   return result
 }
