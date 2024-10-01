@@ -136,10 +136,18 @@ const showStorageData = () => {
     console.log('tasks', response.message)
   })
 }
-const loadCache = () => {
+const loadCache = async () => {
   chrome.runtime.sendMessage({ action: 'getStorage', key: 'cache' }, (response) => {
     if (response.message) {
       _data.value = response.message
+    } else {
+      _data.value = {
+        id: 0,
+        taskHeader: '',
+        taskUrl: '',
+        taskBranch: '',
+        times: []
+      }
     }
   })
 }
@@ -152,6 +160,8 @@ const loadTasks = async () => {
   chrome.runtime.sendMessage({ action: 'getStorage', key: 'tasks' }, (response) => {
     if (response.message) {
       _tasks.value = response.message
+    } else {
+      _tasks.value = []
     }
   })
 }
@@ -160,9 +170,11 @@ const saveTasks = () => {
     console.log(response.message)
   })
 }
-const deleteAllData = () => {
-  chrome.runtime.sendMessage({ action: 'deleteStorage' }, (response) => {
+const deleteAllData = async () => {
+  chrome.runtime.sendMessage({ action: 'deleteStorage' }, async (response) => {
     console.log(response.message)
+    await loadTasks()
+    await loadCache()
   })
 }
 const openInNewTab = () => {
