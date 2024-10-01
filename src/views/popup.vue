@@ -16,9 +16,7 @@
           @select="fileOnChange($event)"
         >
         </FileUpload>
-
-        <!-- TODO 下載 -->
-        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadFile('json')" />
+        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
         <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
       </div>
       <div class="w-2rem flex justify-content-center align-content-end flex-wrap">
@@ -397,6 +395,15 @@ const selectedDateTimeline = computed(() => {
 
 const sortedTimelines = computed(() => _data.value.times.sort((a, b) => (a.date > b.date ? 1 : b.date > a.date ? -1 : 0)))
 
+const downloadOnClick = () => {
+  let dlAnchorElem = document.getElementById('downloadAnchorElem')
+
+  var dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_tasks.value))
+  dlAnchorElem.setAttribute('href', dataStr)
+  dlAnchorElem.setAttribute('download', `taskdata-${new Date().toLocaleDateString().replaceAll('/', '-')}.json`)
+  dlAnchorElem.click()
+}
+
 async function fileOnChange(event) {
   const file = event.files[0]
 
@@ -406,9 +413,13 @@ async function fileOnChange(event) {
     reader.onload = (e) => {
       try {
         const jsonData = JSON.parse(e.target.result)
-        console.log('文件內容:', jsonData)
 
-        uploadJsonData(jsonData)
+        if (!validateTaskData(jsonData)) {
+          return
+        }
+
+        _tasks.value = jsonData
+        saveTasks()
       } catch (error) {
         console.error('無法解析 JSON 文件:', error)
       }
@@ -422,15 +433,6 @@ async function fileOnChange(event) {
   } else {
     console.error('請上傳 JSON 文件')
   }
-}
-
-const uploadJsonData = (json) => {
-  if (!validateTaskData(json)) {
-    return
-  }
-
-  _tasks.value = json
-  saveTasks()
 }
 
 function validateTaskData(tasks) {
