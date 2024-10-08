@@ -1,6 +1,6 @@
 <template>
   <div>
-    <span>{{ props.date }}</span>
+    <span>{{ props.date }} ({{ calHour }})</span>
     <div class="timeline">
       <div
         v-for="period in props.workTime"
@@ -26,6 +26,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps(['modelValue', 'date', 'workTime', 'restTime', 'showScale'])
 
 const getPeriodStyle = (period, color) => {
@@ -46,6 +48,21 @@ const getTimeMarks = () => {
   }
   return marks
 }
+
+const calHour = computed(() => {
+  const dayMinutes = props.workTime?.reduce((dayMinutes, period) => {
+    const [start, end] = period
+    return dayMinutes + (end - start)
+  }, 0)
+
+  if (!dayMinutes) {
+    return '00:00'
+  }
+
+  return `${Math.floor(dayMinutes / 60)
+    .toString()
+    .padStart(2, '0')}:${(dayMinutes % 60).toString().padStart(2, '0')}`
+})
 </script>
 
 <style scoped>
