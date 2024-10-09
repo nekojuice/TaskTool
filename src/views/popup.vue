@@ -15,7 +15,7 @@
         icon="pi pi-window-maximize"
         severity="secondary"
         outlined
-        @click="openInNewTab()"
+        @click="openInNewTab('/index.html')"
       />
       <div class="h-2rem w-2rem"></div>
       <Button
@@ -24,7 +24,7 @@
         icon="pi pi-book"
         severity="info"
         :outlined="!showBlock.taskEditor"
-        @click="[showBlock.taskEditor = !showBlock.taskEditor, saveCache()]"
+        @click="[(showBlock.taskEditor = !showBlock.taskEditor), saveCache()]"
       />
       <Button
         v-tooltip="'開起時段編輯區塊'"
@@ -32,7 +32,7 @@
         icon="pi pi-clock"
         severity="info"
         :outlined="!showBlock.timeEditor"
-        @click="[showBlock.timeEditor = !showBlock.timeEditor, saveCache()]"
+        @click="[(showBlock.timeEditor = !showBlock.timeEditor), saveCache()]"
       />
       <div class="h-2rem w-2rem"></div>
       <FileUpload
@@ -81,7 +81,7 @@
           <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader.trim()" />
         </div>
         <div class="col-6">
-          <label for="taskUrl">連結</label>
+          <label for="taskUrl">連結 <Button class="h-1rem w-1rem" icon="pi pi-link" severity="secondary" @click="openInNewTab(_data.taskUrl)" text size="small"></Button></label>
           <InputText id="taskUrl" class="w-full" type="text" v-model="_data.taskUrl" @change="saveCache()" />
         </div>
         <div class="col-6">
@@ -248,8 +248,8 @@ const deleteAllData = async () => {
     await loadCache()
   })
 }
-const openInNewTab = () => {
-  window.open('/index.html', '_blank')
+const openInNewTab = (url) => {
+  window.open(url, '_blank')
 }
 const newTask = () => {
   if (!_tasks.value.filter((t) => t.id == _data.value.id).length) {
@@ -284,7 +284,6 @@ const saveTaskInfo = () => {
   saveTasks()
 }
 
-// TODO
 const saveTime = () => {
   const taskIndex = _tasks.value.findIndex((t) => t.id == _data.value.id)
   const timeIndex = _tasks.value[taskIndex]?.times.findIndex((t) => t.date == _time.value.date) ?? -1
