@@ -1,110 +1,112 @@
 <template>
-  <div class="grid h-full w-full">
-    <div class="col-1 p-0 flex justify-content-center flex-wrap">
-      <div class="w-2rem flex justify-content-center align-content-start flex-wrap">
-        <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-ellipsis-v" severity="secondary" outlined @click="showStorageData()" />
-        <Button
-          v-tooltip="'在新瀏覽器標籤開啟'"
-          class="h-2rem w-2rem flex align-items-center justify-content-center"
-          icon="pi pi-window-maximize"
-          severity="secondary"
-          outlined
-          @click="openInNewTab()"
-        />
-        <FileUpload
-          v-tooltip="'上傳並覆蓋資料'"
-          name="demo[]"
-          mode="basic"
-          auto
-          customUpload
-          chooseIcon="pi pi-upload"
-          :chooseButtonProps="{ label: '', class: 'h-2rem w-2rem flex align-items-center justify-content-center', severity: 'danger', outlined: true }"
-          accept=".json"
-          :maxFileSize="1000000"
-          @select="fileOnChange($event)"
-        >
-        </FileUpload>
-        <Button v-tooltip="'下載資料'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
-        <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
+  <div class="sidenav p-0 flex justify-content-center flex-wrap">
+    <div class="w-2rem flex justify-content-center align-content-start flex-wrap">
+      <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-ellipsis-v" severity="secondary" outlined @click="showStorageData()" />
+      <Button
+        v-tooltip="'在新瀏覽器標籤開啟'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-window-maximize"
+        severity="secondary"
+        outlined
+        @click="openInNewTab()"
+      />
+      <FileUpload
+        v-tooltip="'上傳並覆蓋資料'"
+        name="demo[]"
+        mode="basic"
+        auto
+        customUpload
+        chooseIcon="pi pi-upload"
+        :chooseButtonProps="{ label: '', class: 'h-2rem w-2rem flex align-items-center justify-content-center', severity: 'danger', outlined: true }"
+        accept=".json"
+        :maxFileSize="1000000"
+        @select="fileOnChange($event)"
+      >
+      </FileUpload>
+      <Button v-tooltip="'下載資料'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
+      <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
+    </div>
+    <div class="w-2rem flex justify-content-center align-content-end flex-wrap">
+      <Button v-tooltip="'DEBUG, all tasks'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="A" outlined @click="console.log('tasks', _tasks)" />
+      <Button v-tooltip="'DEBUG, current data'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="D" outlined @click="console.log('data', _data)" />
+      <Button v-tooltip="'DEBUG, current data all times'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="T" outlined @click="console.log('time', _time)" />
+      <Button v-tooltip="'DEBUG, current period'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="P" outlined @click="console.log('period', _period)" />
+      <Button v-tooltip="'⚠️刪除所有資料'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-trash" severity="danger" outlined @click="deleteAllData()" />
+    </div>
+  </div>
+  <div class="main">
+    <!-- Task Info -->
+    <div class="grid">
+      <div class="col-1">
+        <label for="taskId">編號</label>
+        <InputNumber id="taskId" v-model="_data.id" inputClass="w-full" :min="0" size="small" :disabled="true" />
       </div>
-      <div class="w-2rem flex justify-content-center align-content-end flex-wrap">
-        <Button v-tooltip="'DEBUG, all tasks'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="A" outlined @click="console.log('tasks', _tasks)" />
-        <Button v-tooltip="'DEBUG, current data'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="D" outlined @click="console.log('data', _data)" />
-        <Button v-tooltip="'DEBUG, current data all times'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="T" outlined @click="console.log('time', _time)" />
-        <Button v-tooltip="'DEBUG, current period'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="P" outlined @click="console.log('period', _period)" />
-        <Button v-tooltip="'⚠️刪除所有資料'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-trash" severity="danger" outlined @click="deleteAllData()" />
+      <div class="col-9">
+        <label for="taskHeader">標題</label>
+        <InputText id="taskHeader" class="w-full" type="text" v-model="_data.taskHeader" @change="saveCache()" />
+      </div>
+      <div class="col-1">
+        <label>新增</label>
+        <Button icon="pi pi-plus" outlined raised @click="newTask()" />
+      </div>
+      <div class="col-1">
+        <label>儲存</label>
+        <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader.trim()" />
+      </div>
+      <div class="col-6">
+        <label for="taskUrl">連結</label>
+        <InputText id="taskUrl" class="w-full" type="text" v-model="_data.taskUrl" @change="saveCache()" />
+      </div>
+      <div class="col-6">
+        <label for="taskBranch">分支</label>
+        <InputText id="taskBranch" class="w-full" type="text" v-model="_data.taskBranch" @change="saveCache()" />
       </div>
     </div>
-    <div class="col-11">
+
+    <Divider />
+
+    <!-- Time Editor -->
+    <div class="grid">
+      <div class="col-3">
+        <label>任務日期</label>
+        <InputTextDate class="w-full" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>&nbsp;
+      </div>
+      <div class="col-8">
+        <label>時段</label>
+        <div class="w-full">
+          <InputNumber v-model="computedStartTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
+          <InputNumber v-model="computedStartTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
+          &nbsp;~&nbsp;
+          <InputNumber v-model="computedEndTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
+          <InputNumber v-model="computedEndTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
+        </div>
+      </div>
+      <div class="col-1">
+        <label>加入</label>
+        <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTime" />
+      </div>
+      <Slider class="mt-1 col-12" v-model="_period" range :step="1" :max="1441" pt:startHandler:style="margin-top: 8px; z-index: 10;" pt:endHandler:style="margin-top: 8px; z-index: 10;" />
+      <br />
+      <Timeline class="col-12 p-0 mt-3" :workTime="selectedDateTimeline?.periods" :restTime="[[710, 800]]" :showScale="true"></Timeline>
+    </div>
+
+    <Divider />
+
+    <!-- Tasks List and Data -->
+    <!-- TODO: 刪除task -->
+    <div class="target">
       <div class="grid">
-        <div class="col-1">
-          <label for="taskId">編號</label>
-          <InputNumber id="taskId" v-model="_data.id" inputClass="w-full" :min="0" size="small" :disabled="true" />
-        </div>
-        <div class="col-9">
-          <label for="taskHeader">標題</label>
-          <InputText id="taskHeader" class="w-full" type="text" v-model="_data.taskHeader" @change="saveCache()" />
-        </div>
-        <div class="col-1">
-          <label>新增</label>
-          <Button icon="pi pi-plus" outlined raised @click="newTask()" />
-        </div>
-        <div class="col-1">
-          <label>儲存</label>
-          <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader.trim()" />
-        </div>
-        <div class="col-6">
-          <label for="taskUrl">連結</label>
-          <InputText id="taskUrl" class="w-full" type="text" v-model="_data.taskUrl" @change="saveCache()" />
-        </div>
-        <div class="col-6">
-          <label for="taskBranch">分支</label>
-          <InputText id="taskBranch" class="w-full" type="text" v-model="_data.taskBranch" @change="saveCache()" />
-        </div>
-
-        <Divider />
-
-        <div class="col-12">
-          <div class="grid">
-            <div class="col-3">
-              <label>任務日期</label>
-              <InputTextDate class="w-full" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>&nbsp;
-            </div>
-            <div class="col-8">
-              <label>時段</label>
-              <div class="w-full">
-                <InputNumber v-model="computedStartTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
-                <InputNumber v-model="computedStartTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
-                &nbsp;~&nbsp;
-                <InputNumber v-model="computedEndTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
-                <InputNumber v-model="computedEndTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
-              </div>
-            </div>
-            <div class="col-1">
-              <label>加入</label>
-              <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTime" />
-            </div>
-            <Slider class="mt-1 col-12" v-model="_period" range :step="1" :max="1441" />
-            <br />
-            <Timeline class="col-12 p-0" :workTime="selectedDateTimeline?.periods" :restTime="[[710, 800]]" :showScale="true"></Timeline>
-          </div>
-        </div>
-
-        <Divider />
-
-        <!-- TODO: 刪除task -->
         <div class="col-8">
           <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
-            <Column rowReorder />
-            <!-- <Column field="id" header="id"></Column> -->
-            <Column field="taskHeader" header="標題">
+            <Column rowReorder class="w-1" />
+            <Column field="taskHeader" header="標題" sclass="w-9">
               <template #body="slotProps">
-                <Button class="max-w-10rem justify-content-start white-space-nowrap overflow-hidden text-overflow-ellipsis" @click="_data = { ...slotProps.data }">{{
-                  slotProps.data.taskHeader
-                }}</Button>
+                <Button @click="[(_data = { ...slotProps.data }), saveCache()]">
+                  {{ slotProps.data.taskHeader }}
+                </Button>
               </template>
             </Column>
-            <Column field="effort" header="effort">
+            <Column field="effort" header="effort" class="w-2">
               <template #body="slotProps">
                 {{ calEffort(slotProps.data.times) }}
               </template>
@@ -112,8 +114,10 @@
           </DataTable>
         </div>
         <div class="col-4">
-          <span v-if="!sortedTimelines.length">任務: {{ _data.taskHeader }}<br />目前沒有時數紀錄</span>
-          <Timeline v-for="day in sortedTimelines" :date="day.date" :workTime="day.periods" :restTime="[[710, 800]]"></Timeline>
+          <span>任務: {{ _data.taskHeader }}</span>
+          <br />
+          <span v-if="!sortedTimelines.length">目前沒有時數紀錄</span>
+          <Timeline v-for="day in sortedTimelines" :date="day.date" :workTime="day.periods" :restTime="[[710, 800]]" :showDateAndSum="true"></Timeline>
         </div>
       </div>
     </div>
@@ -130,6 +134,7 @@ import Divider from 'primevue/divider'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import FileUpload from 'primevue/fileupload'
+import ScrollPanel from 'primevue/scrollpanel'
 
 import InputTextDate from '@/components/InputTextDate.vue'
 import Timeline from '@/components/Timeline.vue'
@@ -142,7 +147,6 @@ onMounted(() => {
 })
 
 const _tasks = ref([])
-
 const _data = ref({
   id: 0,
   taskHeader: '',
@@ -152,6 +156,10 @@ const _data = ref({
 })
 const _time = ref({ date: convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }), periods: [] })
 const _period = ref([new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()])
+const showBlock = ref({
+  taskEditor: false,
+  timeEditor: false
+})
 
 const showStorageData = () => {
   chrome.runtime.sendMessage({ action: 'getStorage', key: 'cache' }, (response) => {
@@ -263,6 +271,7 @@ const saveTime = () => {
   }
 
   saveTasks()
+  saveCache()
 }
 
 function processWorkPeriods(workPeriods) {
@@ -517,4 +526,31 @@ function validateTaskData(tasks) {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.sidenav {
+  height: 90%;
+  width: 32px;
+  position: fixed;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.main {
+  margin-left: 64px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.target {
+  padding: 10px;
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #f0f0f0;
+}
+
+.p-slider-handle {
+  handle-width: 1px;
+}
+</style>

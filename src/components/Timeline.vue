@@ -1,6 +1,6 @@
 <template>
   <div>
-    <span>{{ props.date }} ({{ calHour }})</span>
+    <span v-if="props.showDateAndSum">{{ props.date }} ({{ calHour }})</span>
     <div class="timeline">
       <div
         v-for="period in props.workTime"
@@ -28,7 +28,7 @@
 <script setup>
 import { computed } from 'vue'
 
-const props = defineProps(['modelValue', 'date', 'workTime', 'restTime', 'showScale'])
+const props = defineProps(['modelValue', 'date', 'workTime', 'restTime', 'showScale', 'showDateAndSum'])
 
 const getPeriodStyle = (period, color) => {
   const start = (period[0] / 1440) * 100
