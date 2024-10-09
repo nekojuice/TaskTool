@@ -1,7 +1,14 @@
 <template>
   <div class="sidenav p-0 flex justify-content-center flex-wrap">
     <div class="w-2rem flex justify-content-center align-content-start flex-wrap">
-      <Button class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-ellipsis-v" severity="secondary" outlined @click="showStorageData()" />
+      <Button
+        v-tooltip="'開起debug區塊'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-ellipsis-v"
+        severity="secondary"
+        :outlined="!showBlock.debugBlock"
+        @click="showBlock.debugBlock = !showBlock.debugBlock"
+      />
       <Button
         v-tooltip="'在新瀏覽器標籤開啟'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
@@ -10,6 +17,24 @@
         outlined
         @click="openInNewTab()"
       />
+      <div class="h-2rem w-2rem"></div>
+      <Button
+        v-tooltip="'開起任務編輯區塊'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-book"
+        severity="info"
+        :outlined="!showBlock.taskEditor"
+        @click="[showBlock.taskEditor = !showBlock.taskEditor, saveCache()]"
+      />
+      <Button
+        v-tooltip="'開起時段編輯區塊'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-clock"
+        severity="info"
+        :outlined="!showBlock.timeEditor"
+        @click="[showBlock.timeEditor = !showBlock.timeEditor, saveCache()]"
+      />
+      <div class="h-2rem w-2rem"></div>
       <FileUpload
         v-tooltip="'上傳並覆蓋資料'"
         name="demo[]"
@@ -26,8 +51,9 @@
       <Button v-tooltip="'下載資料'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
       <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
     </div>
-    <div class="w-2rem flex justify-content-center align-content-end flex-wrap">
-      <Button v-tooltip="'DEBUG, all tasks'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="A" outlined @click="console.log('tasks', _tasks)" />
+    <!-- debugblock -->
+    <div v-if="showBlock.debugBlock" class="w-2rem flex justify-content-center align-content-end flex-wrap">
+      <Button v-tooltip="'DEBUG, all tasks and cache'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="A" outlined @click="showStorageData()" />
       <Button v-tooltip="'DEBUG, current data'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="D" outlined @click="console.log('data', _data)" />
       <Button v-tooltip="'DEBUG, current data all times'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="T" outlined @click="console.log('time', _time)" />
       <Button v-tooltip="'DEBUG, current period'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="P" outlined @click="console.log('period', _period)" />
@@ -36,62 +62,60 @@
   </div>
   <div class="main">
     <!-- Task Info -->
-    <div class="grid">
-      <div class="col-1">
-        <label for="taskId">編號</label>
-        <InputNumber id="taskId" v-model="_data.id" inputClass="w-full" :min="0" size="small" :disabled="true" />
-      </div>
-      <div class="col-9">
-        <label for="taskHeader">標題</label>
-        <InputText id="taskHeader" class="w-full" type="text" v-model="_data.taskHeader" @change="saveCache()" />
-      </div>
-      <div class="col-1">
-        <label>新增</label>
-        <Button icon="pi pi-plus" outlined raised @click="newTask()" />
-      </div>
-      <div class="col-1">
-        <label>儲存</label>
-        <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader.trim()" />
-      </div>
-      <div class="col-6">
-        <label for="taskUrl">連結</label>
-        <InputText id="taskUrl" class="w-full" type="text" v-model="_data.taskUrl" @change="saveCache()" />
-      </div>
-      <div class="col-6">
-        <label for="taskBranch">分支</label>
-        <InputText id="taskBranch" class="w-full" type="text" v-model="_data.taskBranch" @change="saveCache()" />
-      </div>
-    </div>
-
-    <Divider />
-
-    <!-- Time Editor -->
-    <div class="grid">
-      <div class="col-3">
-        <label>任務日期</label>
-        <InputTextDate class="w-full" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>&nbsp;
-      </div>
-      <div class="col-8">
-        <label>時段</label>
-        <div class="w-full">
-          <InputNumber v-model="computedStartTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
-          <InputNumber v-model="computedStartTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
-          &nbsp;~&nbsp;
-          <InputNumber v-model="computedEndTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
-          <InputNumber v-model="computedEndTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
+    <Panel v-if="showBlock.taskEditor">
+      <div class="grid">
+        <div class="col-1">
+          <label for="taskId">編號</label>
+          <InputNumber id="taskId" v-model="_data.id" inputClass="w-full" :min="0" size="small" :disabled="true" />
+        </div>
+        <div class="col-9">
+          <label for="taskHeader">標題</label>
+          <InputText id="taskHeader" class="w-full" type="text" v-model="_data.taskHeader" @change="saveCache()" />
+        </div>
+        <div class="col-1">
+          <label>新增</label>
+          <Button icon="pi pi-plus" outlined raised @click="newTask()" />
+        </div>
+        <div class="col-1">
+          <label>儲存</label>
+          <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader.trim()" />
+        </div>
+        <div class="col-6">
+          <label for="taskUrl">連結</label>
+          <InputText id="taskUrl" class="w-full" type="text" v-model="_data.taskUrl" @change="saveCache()" />
+        </div>
+        <div class="col-6">
+          <label for="taskBranch">分支</label>
+          <InputText id="taskBranch" class="w-full" type="text" v-model="_data.taskBranch" @change="saveCache()" />
         </div>
       </div>
-      <div class="col-1">
-        <label>加入</label>
-        <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTime" />
+    </Panel>
+    <!-- Time Editor -->
+    <Panel v-if="showBlock.timeEditor" class="pl-3 pr-3">
+      <div class="grid">
+        <div class="col-3">
+          <label>任務日期</label>
+          <InputTextDate class="w-full" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>&nbsp;
+        </div>
+        <div class="col-8">
+          <label>時段</label>
+          <div class="w-full">
+            <InputNumber v-model="computedStartTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
+            <InputNumber v-model="computedStartTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
+            &nbsp;~&nbsp;
+            <InputNumber v-model="computedEndTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
+            <InputNumber v-model="computedEndTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
+          </div>
+        </div>
+        <div class="col-1">
+          <label>加入</label>
+          <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTime" />
+        </div>
+        <Slider class="mt-1 col-12" v-model="_period" range :step="1" :max="1441" pt:startHandler:style="margin-top: 8px; z-index: 10;" pt:endHandler:style="margin-top: 8px; z-index: 10;" />
+        <br />
+        <Timeline class="col-12 p-0 mt-3" :workTime="selectedDateTimeline?.periods" :restTime="[[710, 800]]" :showScale="true"></Timeline>
       </div>
-      <Slider class="mt-1 col-12" v-model="_period" range :step="1" :max="1441" pt:startHandler:style="margin-top: 8px; z-index: 10;" pt:endHandler:style="margin-top: 8px; z-index: 10;" />
-      <br />
-      <Timeline class="col-12 p-0 mt-3" :workTime="selectedDateTimeline?.periods" :restTime="[[710, 800]]" :showScale="true"></Timeline>
-    </div>
-
-    <Divider />
-
+    </Panel>
     <!-- Tasks List and Data -->
     <!-- TODO: 刪除task -->
     <div class="target">
@@ -101,7 +125,7 @@
             <Column rowReorder class="w-1" />
             <Column field="taskHeader" header="標題" sclass="w-9">
               <template #body="slotProps">
-                <Button @click="[(_data = { ...slotProps.data }), saveCache()]">
+                <Button @click="[(_data = { ...slotProps.data }), saveCache()]" :severity="isSelected(slotProps.data.id)">
                   {{ slotProps.data.taskHeader }}
                 </Button>
               </template>
@@ -130,11 +154,10 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Slider from 'primevue/slider'
 import InputNumber from 'primevue/inputnumber'
-import Divider from 'primevue/divider'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import FileUpload from 'primevue/fileupload'
-import ScrollPanel from 'primevue/scrollpanel'
+import Panel from 'primevue/panel'
 
 import InputTextDate from '@/components/InputTextDate.vue'
 import Timeline from '@/components/Timeline.vue'
@@ -158,7 +181,8 @@ const _time = ref({ date: convertDateToString(new Date(), 'yyyyMMdd', { separato
 const _period = ref([new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()])
 const showBlock = ref({
   taskEditor: false,
-  timeEditor: false
+  timeEditor: false,
+  debugBlock: false
 })
 
 const showStorageData = () => {
@@ -183,9 +207,23 @@ const loadCache = async () => {
       }
     }
   })
+  chrome.runtime.sendMessage({ action: 'getStorage', key: 'UIcache' }, (response) => {
+    if (response.message) {
+      showBlock.value = response.message
+    } else {
+      showBlock.value = {
+        taskEditor: false,
+        timeEditor: false,
+        debugBlock: false
+      }
+    }
+  })
 }
 const saveCache = () => {
   chrome.runtime.sendMessage({ action: 'setStorage', obj: { cache: _data.value } }, (response) => {
+    console.log(response.message)
+  })
+  chrome.runtime.sendMessage({ action: 'setStorage', obj: { UIcache: showBlock.value } }, (response) => {
     console.log(response.message)
   })
 }
@@ -468,6 +506,10 @@ async function fileOnChange(event) {
   } else {
     console.error('請上傳 JSON 文件')
   }
+}
+
+function isSelected(rowid) {
+  return _data.value.id == rowid ? 'warn' : 'primary'
 }
 
 function validateTaskData(tasks) {
