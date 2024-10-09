@@ -19,7 +19,7 @@
       />
       <div class="h-2rem w-2rem"></div>
       <Button
-        v-tooltip="'開起任務編輯區塊'"
+        v-tooltip="'任務編輯區塊'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-book"
         severity="info"
@@ -27,12 +27,20 @@
         @click="[(showBlock.taskEditor = !showBlock.taskEditor), saveCache()]"
       />
       <Button
-        v-tooltip="'開起時段編輯區塊'"
+        v-tooltip="'時段編輯區塊'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-clock"
         severity="info"
         :outlined="!showBlock.timeEditor"
         @click="[(showBlock.timeEditor = !showBlock.timeEditor), saveCache()]"
+      />
+      <Button
+        v-tooltip="'顯示刪除按鈕'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-unlock"
+        severity="danger"
+        :outlined="!showBlock.deleteMode"
+        @click="[(showBlock.deleteMode = !showBlock.deleteMode), saveCache()]"
       />
       <div class="h-2rem w-2rem"></div>
       <FileUpload
@@ -94,11 +102,19 @@
     <Panel v-if="showBlock.timeEditor" class="pl-3 pr-3">
       <div class="grid">
         <div class="col-3">
-          <label>任務日期</label>
+          <label>任務日期&nbsp;<Button class="h-1rem" outlined raised @click="_time.date = convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })" label="今日" size="small" /></label>
           <InputTextDate class="w-full" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>&nbsp;
         </div>
         <div class="col-8">
-          <label>時段</label>
+          <label
+            >時段&nbsp;<Button
+              class="h-1rem"
+              outlined
+              raised
+              @click="_period = [new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()]"
+              label="現在"
+              size="small"
+          /></label>
           <div class="w-full">
             <InputNumber v-model="computedStartTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
             <InputNumber v-model="computedStartTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
@@ -135,13 +151,27 @@
                 {{ calEffort(slotProps.data.times) }}
               </template>
             </Column>
+            <Column v-if="showBlock.deleteMode" field="delete" header="刪除">
+              <template #body="slotProps">
+                <Button icon="pi pi-trash" severity="danger" size="small" raised @click="deleteTask(slotProps.data.id)" />
+              </template>
+            </Column>
           </DataTable>
         </div>
         <div class="col-4">
           <span>任務: {{ _data.taskHeader }}</span>
           <br />
           <span v-if="!sortedTimelines.length">目前沒有時數紀錄</span>
-          <Timeline v-for="day in sortedTimelines" :date="day.date" :workTime="day.periods" :restTime="[[710, 800]]" :showDateAndSum="true"></Timeline>
+          <Timeline
+            v-for="day in sortedTimelines"
+            :date="day.date"
+            :workTime="day.periods"
+            :restTime="[[710, 800]]"
+            :showDateAndSum="true"
+            :deleteMode="showBlock.deleteMode"
+            @click="_time.date = day.date"
+            @deleteDate="deleteDate(day.date)"
+          ></Timeline>
         </div>
       </div>
     </div>
@@ -182,7 +212,8 @@ const _period = ref([new Date().getHours() * 60 + new Date().getMinutes() - 60, 
 const showBlock = ref({
   taskEditor: false,
   timeEditor: false,
-  debugBlock: false
+  debugBlock: false,
+  deleteMode: false
 })
 
 const showStorageData = () => {
@@ -210,11 +241,13 @@ const loadCache = async () => {
   chrome.runtime.sendMessage({ action: 'getStorage', key: 'UIcache' }, (response) => {
     if (response.message) {
       showBlock.value = response.message
+      showBlock.value.deleteMode = false
     } else {
       showBlock.value = {
         taskEditor: false,
         timeEditor: false,
-        debugBlock: false
+        debugBlock: false,
+        deleteMode: false
       }
     }
   })
@@ -509,6 +542,35 @@ async function fileOnChange(event) {
 
 function isSelected(rowid) {
   return _data.value.id == rowid ? 'warn' : 'primary'
+}
+
+function deleteTask(rowid) {
+  // TODO
+  console.log(rowid)
+}
+
+function deleteDate(rowdate) {
+  
+  const taskIndex = _tasks.value.findIndex((t) => t.id === _data.value.id)
+
+  if (taskIndex === -1) return
+
+  if (rowdate) {
+    const timesIndex = _tasks.value[taskIndex].times.findIndex((t) => t.date === rowdate)
+    if (timesIndex !== -1) {
+      _tasks.value[taskIndex].times.splice(timesIndex, 1)
+      console.log(timesIndex, rowdate);
+    }
+
+    const dataTimeIndex = _data.value.times.findIndex((t) => t.date === rowdate)
+    if (dataTimeIndex !== -1) {
+      _data.value.times.splice(dataTimeIndex, 1)
+      console.log(dataTimeIndex, rowdate);
+    }
+
+    saveTasks()
+    saveCache()
+  }
 }
 
 function validateTaskData(tasks) {

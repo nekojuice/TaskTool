@@ -1,6 +1,9 @@
 <template>
   <div>
-    <span v-if="props.showDateAndSum">{{ props.date }} ({{ calHour }})</span>
+    <span v-if="props.showDateAndSum">
+      <Button v-if="props.deleteMode" class="h-1rem w-1rem" icon="pi pi-trash" severity="danger" size="small" raised @click="emit('deleteDate', $event)" />
+      {{ props.date }} ({{ calHour }})
+    </span>
     <div class="timeline">
       <div
         v-for="period in props.workTime"
@@ -26,9 +29,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, defineEmits } from 'vue'
 
-const props = defineProps(['modelValue', 'date', 'workTime', 'restTime', 'showScale', 'showDateAndSum'])
+import Button from 'primevue/button'
+
+const props = defineProps(['modelValue', 'date', 'workTime', 'restTime', 'showScale', 'showDateAndSum', 'deleteMode'])
+const emit = defineEmits(['deleteDate'])
 
 const getPeriodStyle = (period, color) => {
   const start = (period[0] / 1440) * 100
