@@ -134,6 +134,7 @@
     </Panel>
     <!-- Tasks List and Data -->
     <!-- TODO: 刪除task -->
+    <ConfirmDialog></ConfirmDialog>
     <div class="target">
       <div class="grid">
         <div class="col-8">
@@ -188,6 +189,8 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import FileUpload from 'primevue/fileupload'
 import Panel from 'primevue/panel'
+import ConfirmDialog from 'primevue/confirmdialog'
+import { useConfirm } from 'primevue/useconfirm'
 
 import InputTextDate from '@/components/InputTextDate.vue'
 import Timeline from '@/components/Timeline.vue'
@@ -198,6 +201,8 @@ onMounted(() => {
   loadCache()
   loadTasks()
 })
+
+const confirm = useConfirm()
 
 const _tasks = ref([])
 const _data = ref({
@@ -291,7 +296,7 @@ const newTask = () => {
 
   let maxId = 0
 
-  if (_data.value.length === 0) {
+  if (_tasks.value.length === 0) {
     maxId = 0
   } else {
     maxId = Math.max(..._tasks.value.map((item) => item.id))
@@ -545,12 +550,45 @@ function isSelected(rowid) {
 }
 
 function deleteTask(rowid) {
-  // TODO
-  console.log(rowid)
+  const taskIndex = _tasks.value.findIndex((t) => t.id === rowid)
+
+  if (taskIndex === -1) return
+
+  confirm.require({
+    header: '確認刪除任務?',
+    message: `#${rowid}: ${_tasks.value[taskIndex].taskHeader}`,
+    icon: 'pi pi-info-circle',
+    rejectProps: {
+      label: '取消',
+      severity: 'secondary',
+      outlined: true
+    },
+    acceptProps: {
+      label: '刪除',
+      severity: 'danger'
+    },
+    accept: () => {
+      _tasks.value.splice(taskIndex, 1)
+
+      if (_data.value.id == rowid) {
+        let maxId = Math.max(..._tasks.value.map((item) => item.id))
+        _data.value = {
+          id: maxId + 1,
+          taskHeader: '',
+          taskUrl: '',
+          taskBranch: '',
+          times: []
+        }
+
+        saveCache()
+      }
+      saveTasks()
+    },
+    reject: () => {}
+  })
 }
 
 function deleteDate(rowdate) {
-  
   const taskIndex = _tasks.value.findIndex((t) => t.id === _data.value.id)
 
   if (taskIndex === -1) return
@@ -559,13 +597,13 @@ function deleteDate(rowdate) {
     const timesIndex = _tasks.value[taskIndex].times.findIndex((t) => t.date === rowdate)
     if (timesIndex !== -1) {
       _tasks.value[taskIndex].times.splice(timesIndex, 1)
-      console.log(timesIndex, rowdate);
+      console.log(timesIndex, rowdate)
     }
 
     const dataTimeIndex = _data.value.times.findIndex((t) => t.date === rowdate)
     if (dataTimeIndex !== -1) {
       _data.value.times.splice(dataTimeIndex, 1)
-      console.log(dataTimeIndex, rowdate);
+      console.log(dataTimeIndex, rowdate)
     }
 
     saveTasks()
@@ -651,9 +689,5 @@ function validateTaskData(tasks) {
   overflow-y: auto;
   overflow-x: hidden;
   background-color: #f0f0f0;
-}
-
-.p-slider-handle {
-  handle-width: 1px;
 }
 </style>
