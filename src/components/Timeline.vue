@@ -2,7 +2,7 @@
   <div>
     <span v-if="props.showDateAndSum">
       <Button v-if="props.deleteMode" class="h-1rem w-1rem" icon="pi pi-trash" severity="danger" size="small" raised @click="emit('deleteDate', $event)" />
-      {{ props.date }} ({{ calHour }})
+      {{ props.date }} <Tag class="h-1rem" severity="info" :value="new Intl.DateTimeFormat('zh-TW', { weekday: 'short' }).format(new Date(props.date))"></Tag> ({{ calHour }})
     </span>
     <div class="timeline">
       <div
@@ -32,6 +32,7 @@
 import { computed, defineEmits } from 'vue'
 
 import Button from 'primevue/button'
+import Tag from 'primevue/tag'
 
 const props = defineProps(['modelValue', 'date', 'workTime', 'restTime', 'showScale', 'showDateAndSum', 'deleteMode'])
 const emit = defineEmits(['deleteDate'])

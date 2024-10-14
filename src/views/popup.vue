@@ -163,7 +163,7 @@
           <span>任務: {{ _data.taskHeader }}</span>
           <br />
           <span v-if="!sortedTimelines.length">目前沒有時數紀錄</span>
-          <Timeline
+          <!-- <Timeline
             v-for="day in sortedTimelines"
             :date="day.date"
             :workTime="day.periods"
@@ -172,7 +172,26 @@
             :deleteMode="showBlock.deleteMode"
             @click="_time.date = day.date"
             @deleteDate="deleteDate(day.date)"
-          ></Timeline>
+          ></Timeline> -->
+
+          <!-- DEBUG -->
+          <div class="grouped-timeline">
+            <div v-for="week in groupedTimelines" :key="week.weekKey" class="mt-2">
+              <Tag :value="week.formattedWeek"></Tag>
+              <div>
+                <Timeline
+                  v-for="day in week.days"
+                  :date="day.date"
+                  :workTime="day.periods"
+                  :restTime="[[710, 800]]"
+                  :showDateAndSum="true"
+                  :deleteMode="showBlock.deleteMode"
+                  @click="_time.date = day.date"
+                  @deleteDate="deleteDate(day.date)"
+                ></Timeline>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -190,6 +209,7 @@ import Column from 'primevue/column'
 import FileUpload from 'primevue/fileupload'
 import Panel from 'primevue/panel'
 import ConfirmDialog from 'primevue/confirmdialog'
+import Tag from 'primevue/tag'
 import { useConfirm } from 'primevue/useconfirm'
 
 import InputTextDate from '@/components/InputTextDate.vue'
@@ -665,6 +685,72 @@ function validateTaskData(tasks) {
 
   return true
 }
+
+// 週月分群
+const getWeekNumber = (date) => {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7))
+  const yearStart = new Date(d.getFullYear(), 0, 1)
+  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7)
+}
+
+const getMonthWeek = (date, month) => {
+  const d = new Date(date)
+  const firstDayOfMonth = new Date(d.getFullYear(), month, 1)
+  const firstDayOfWeek = new Date(firstDayOfMonth)
+  firstDayOfWeek.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay() + 1)
+
+  if (firstDayOfWeek > d) {
+    firstDayOfWeek.setDate(firstDayOfWeek.getDate() - 7)
+  }
+
+  const daysDifference = Math.floor((d - firstDayOfWeek) / (24 * 60 * 60 * 1000))
+  return Math.floor(daysDifference / 7) + 1
+}
+
+const determineWeekMonth = (dates) => {
+  const counts = dates.reduce((acc, date) => {
+    const month = new Date(date).getMonth()
+    acc[month] = (acc[month] || 0) + 1
+    return acc
+  }, {})
+
+  const [month, count] = Object.entries(counts).reduce((max, entry) => (entry[1] > max[1] ? entry : max))
+
+  return Number(month)
+}
+
+const formatMonthWeek = (dates) => {
+  const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
+  const weekMonth = determineWeekMonth(dates)
+  const firstDateOfWeek = new Date(dates[0])
+  const year = firstDateOfWeek.getFullYear()
+  const weekNumber = getMonthWeek(firstDateOfWeek, weekMonth)
+  const month = monthNames[weekMonth]
+  const displayYear = weekMonth === 11 && firstDateOfWeek.getMonth() === 0 ? year - 1 : year
+  return `${displayYear}年 ${month} 第${weekNumber}週`
+}
+
+const groupedTimelines = computed(() => {
+  const grouped = {}
+  sortedTimelines.value.forEach((timeline) => {
+    const date = new Date(timeline.date)
+    const year = date.getFullYear()
+    const week = getWeekNumber(date)
+    const key = `${year}-${week}`
+
+    if (!grouped[key]) {
+      grouped[key] = []
+    }
+    grouped[key].push(timeline)
+  })
+  return Object.entries(grouped).map(([key, value]) => ({
+    weekKey: key,
+    formattedWeek: formatMonthWeek(value.map((v) => v.date)),
+    days: value
+  }))
+})
 </script>
 
 <style scoped>
