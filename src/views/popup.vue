@@ -133,7 +133,6 @@
       </div>
     </Panel>
     <!-- Tasks List and Data -->
-    <!-- TODO: 刪除task -->
     <ConfirmDialog></ConfirmDialog>
     <div class="target">
       <div class="grid">
@@ -617,13 +616,11 @@ function deleteDate(rowdate) {
     const timesIndex = _tasks.value[taskIndex].times.findIndex((t) => t.date === rowdate)
     if (timesIndex !== -1) {
       _tasks.value[taskIndex].times.splice(timesIndex, 1)
-      console.log(timesIndex, rowdate)
     }
 
     const dataTimeIndex = _data.value.times.findIndex((t) => t.date === rowdate)
     if (dataTimeIndex !== -1) {
       _data.value.times.splice(dataTimeIndex, 1)
-      console.log(dataTimeIndex, rowdate)
     }
 
     saveTasks()
@@ -687,12 +684,16 @@ function validateTaskData(tasks) {
 }
 
 // 週月分群
-const getWeekNumber = (date) => {
+const getWeekDates = (date) => {
   const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  d.setDate(d.getDate() + 4 - (d.getDay() || 7))
-  const yearStart = new Date(d.getFullYear(), 0, 1)
-  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7)
+  const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  const monday = new Date(d.setDate(diff))
+  const week = []
+  for (let i = 0; i < 7; i++) {
+    week.push(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i))
+  }
+  return week
 }
 
 const getMonthWeek = (date, month) => {
@@ -711,7 +712,7 @@ const getMonthWeek = (date, month) => {
 
 const determineWeekMonth = (dates) => {
   const counts = dates.reduce((acc, date) => {
-    const month = new Date(date).getMonth()
+    const month = date.getMonth()
     acc[month] = (acc[month] || 0) + 1
     return acc
   }, {})
@@ -723,12 +724,12 @@ const determineWeekMonth = (dates) => {
 
 const formatMonthWeek = (dates) => {
   const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
-  const weekMonth = determineWeekMonth(dates)
-  const firstDateOfWeek = new Date(dates[0])
-  const year = firstDateOfWeek.getFullYear()
-  const weekNumber = getMonthWeek(firstDateOfWeek, weekMonth)
+  const weekDates = getWeekDates(dates[0])
+  const weekMonth = determineWeekMonth(weekDates)
+  const year = weekDates[0].getFullYear()
+  const weekNumber = getMonthWeek(weekDates[0], weekMonth)
   const month = monthNames[weekMonth]
-  const displayYear = weekMonth === 11 && firstDateOfWeek.getMonth() === 0 ? year - 1 : year
+  const displayYear = weekMonth === 11 && weekDates[0].getMonth() === 0 ? year - 1 : year
   return `${displayYear}年 ${month} 第${weekNumber}週`
 }
 
@@ -736,9 +737,8 @@ const groupedTimelines = computed(() => {
   const grouped = {}
   sortedTimelines.value.forEach((timeline) => {
     const date = new Date(timeline.date)
-    const year = date.getFullYear()
-    const week = getWeekNumber(date)
-    const key = `${year}-${week}`
+    const weekDates = getWeekDates(date)
+    const key = weekDates[0].toISOString().split('T')[0]
 
     if (!grouped[key]) {
       grouped[key] = []
@@ -747,7 +747,7 @@ const groupedTimelines = computed(() => {
   })
   return Object.entries(grouped).map(([key, value]) => ({
     weekKey: key,
-    formattedWeek: formatMonthWeek(value.map((v) => v.date)),
+    formattedWeek: formatMonthWeek(value.map((v) => new Date(v.date))),
     days: value
   }))
 })
