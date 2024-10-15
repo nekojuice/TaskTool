@@ -147,8 +147,13 @@
       <div class="grid">
         <div class="col">
           <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
-            <Column rowReorder class="w-1" />
-            <Column field="taskHeader" header="標題" sclass="w-9">
+            <Column rowReorder class="pr-0" style="width: 36px;" />
+            <Column v-if="showBlock.debugBlock" header="編號" class="w-1 white-space-nowrap">
+              <template #body="slotProps">
+                {{ slotProps.data.id }}
+              </template>
+            </Column>
+            <Column field="taskHeader" header="標題" class="w-10">
               <template #body="slotProps">
                 <Button @click="[taskListSelect(slotProps.data), saveCache()]" :severity="taskListSelectedColor(slotProps.data.id)">
                   {{ slotProps.data.taskHeader }}
