@@ -8,7 +8,11 @@
       <div
         v-for="period in props.workTime"
         v-tooltip.bottom="
-          `${Math.floor(period[0] / 60)}:${period[0] % 60}-${Math.floor(period[1] / 60)}:${period[1] % 60} (${Math.floor((period[1] - period[0]) / 60)}h ${(period[1] - period[0]) % 60}min)`
+          `${Math.floor(period[0] / 60)
+            .toString()
+            .padStart(2, '0')}:${(period[0] % 60).toString().padStart(2, '0')}-${Math.floor(period[1] / 60)
+            .toString()
+            .padStart(2, '0')}:${(period[1] % 60).toString().padStart(2, '0')} (${Math.floor((period[1] - period[0]) / 60)}h ${(period[1] - period[0]) % 60}min)`
         "
         :key="index"
         class="time-block"

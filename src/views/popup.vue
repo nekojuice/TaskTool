@@ -393,7 +393,7 @@ const saveTaskInfo = () => {
 
   if (showBlock.value.taskEditor == 2) {
     showBlock.value.taskEditor = 1
-    tempData = null
+    newTaskRestoreTempID.value = -1
   }
 
   saveTasks()
