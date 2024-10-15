@@ -80,13 +80,13 @@
     <!-- Task Info -->
     <Panel v-if="showBlock.taskEditor" :pt:root:style="taskBlockColor()" pt:header:style="padding: 0;" pt:content:style="padding: 18px;">
       <div class="grid">
-        <div class="col-1">
+        <h2 v-if="showBlock.taskEditor == 2" class="col-12">新增任務</h2>
+        <div v-if="showBlock.debugBlock" class="col-1">
           <label for="taskId">編號</label>
           <InputNumber id="taskId" v-model="_data.id" inputClass="w-full" :min="0" size="small" :disabled="true" />
         </div>
-        <div class="col-10">
-          <label v-if="showBlock.taskEditor == 2" for="taskHeader">新增標題</label>
-          <label v-if="showBlock.taskEditor == 1" for="taskHeader">標題</label>
+        <div class="col">
+          <label for="taskHeader">標題</label>
           <InputText id="taskHeader" class="w-full" type="text" v-model="_data.taskHeader" @change="saveCache()" />
         </div>
         <div class="col-1">
@@ -95,6 +95,8 @@
           <br />
           <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader?.trim()" />
         </div>
+      </div>
+      <div class="grid">
         <div class="col-6">
           <label for="taskUrl">連結 <Button class="h-1rem w-1rem" icon="pi pi-link" severity="secondary" @click="openInNewTab(_data.taskUrl)" text size="small"></Button></label>
           <InputText id="taskUrl" class="w-full" type="text" v-model="_data.taskUrl" @change="saveCache()" />
@@ -106,7 +108,7 @@
       </div>
     </Panel>
     <!-- Time Editor -->
-    <Panel v-if="showBlock.timeEditor" class="pl-3 pr-3">
+    <Panel v-if="showBlock.timeEditor" class="pl-3 pr-3" :pt:root:style="taskBlockColor() + 'margin-top: -2px;'">
       <div class="grid">
         <div class="col-3">
           <label>任務日期&nbsp;<Button class="h-1rem" outlined raised @click="_time.date = convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })" label="今日" size="small" /></label>
@@ -143,12 +145,12 @@
     <ConfirmDialog></ConfirmDialog>
     <div class="target">
       <div class="grid">
-        <div class="col-8">
+        <div class="col">
           <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
             <Column rowReorder class="w-1" />
             <Column field="taskHeader" header="標題" sclass="w-9">
               <template #body="slotProps">
-                <Button @click="[taskListSelect(slotProps.data), saveCache()]" :severity="isSelected(slotProps.data.id)">
+                <Button @click="[taskListSelect(slotProps.data), saveCache()]" :severity="taskListSelectedColor(slotProps.data.id)">
                   {{ slotProps.data.taskHeader }}
                 </Button>
               </template>
@@ -165,8 +167,11 @@
             </Column>
           </DataTable>
         </div>
-        <div class="col-4">
-          <span>任務: {{ _data.taskHeader }}</span>
+        <div v-if="_tasks.filter((t) => t.id == _data.id).length" class="col-4">
+          任務:
+          <Tag severity="warn">
+            <h3 class="font-bold">{{ _data.taskHeader }}</h3>
+          </Tag>
           <br />
           <span v-if="!sortedTimelines.length">目前沒有時數紀錄</span>
           <div class="grouped-timeline">
@@ -304,7 +309,7 @@ const openInNewTab = (url) => {
   window.open(url, '_blank')
 }
 
-let newTaskRestoreTempID = -1
+const newTaskRestoreTempID = ref(-1)
 const toggleTaskBlock = () => {
   // off
   if (showBlock.value.taskEditor) {
@@ -312,14 +317,14 @@ const toggleTaskBlock = () => {
   }
   // on
   else if (!showBlock.value.taskEditor) {
-    showBlock.value.taskEditor = newTaskRestoreTempID == -1 ? 1 : 2
+    showBlock.value.taskEditor = _tasks.value.filter((t) => t.id == _data.value.id).length ? 1 : 2
   }
 }
 const toggleNewTask = () => {
   // off
   if (showBlock.value.taskEditor == 2) {
-    if (_tasks.value.filter((t) => t.id == newTaskRestoreTempID).length) {
-      _data.value = { ..._tasks.value.filter((t) => t.id == newTaskRestoreTempID)[0] }
+    if (_tasks.value.filter((t) => t.id == newTaskRestoreTempID.value).length) {
+      _data.value = { ..._tasks.value.filter((t) => t.id == newTaskRestoreTempID.value)[0] }
       showBlock.value.taskEditor = 1
     } else {
       showBlock.value.taskEditor = 0
@@ -330,7 +335,7 @@ const toggleNewTask = () => {
   // on
   else if (!showBlock.value.taskEditor || showBlock.value.taskEditor == 1) {
     showBlock.value.taskEditor = 2
-    newTaskRestoreTempID = _data.value.id
+    newTaskRestoreTempID.value = _data.value.id
   }
 
   if (!_tasks.value.filter((t) => t.id == _data.value.id).length) {
@@ -363,10 +368,13 @@ const taskBlockColor = () => {
 
 const taskListSelect = (data) => {
   _data.value = data
-  newTaskRestoreTempID = data.id
+  newTaskRestoreTempID.value = data.id
   if (showBlock.value.taskEditor == 2) {
     showBlock.value.taskEditor = 1
   }
+}
+function taskListSelectedColor(rowid) {
+  return _data.value.id == rowid ? 'warn' : 'primary'
 }
 
 const saveTaskInfo = () => {
@@ -504,7 +512,6 @@ const computedStartTimeHour = computed({
     _period.value[0] = +value * 60 + minuteValue
   }
 })
-
 const computedStartTimeMinute = computed({
   get() {
     const tick = _period.value[0]
@@ -518,7 +525,6 @@ const computedStartTimeMinute = computed({
     _period.value[0] = hourValue * 60 + +value
   }
 })
-
 const computedEndTimeHour = computed({
   get() {
     const tick = _period.value[1]
@@ -532,7 +538,6 @@ const computedEndTimeHour = computed({
     _period.value[1] = +value * 60 + minuteValue
   }
 })
-
 const computedEndTimeMinute = computed({
   get() {
     const tick = _period.value[1]
@@ -546,7 +551,6 @@ const computedEndTimeMinute = computed({
     _period.value[1] = hourValue * 60 + +value
   }
 })
-
 watch(
   () => _period.value,
   (period) => {
@@ -569,6 +573,72 @@ const selectedDateTimeline = computed(() => {
 
 const sortedTimelines = computed(() => _data.value.times.sort((a, b) => (a.date > b.date ? 1 : b.date > a.date ? -1 : 0)))
 
+// 週月分群
+const getWeekDates = (date) => {
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  const monday = new Date(d.setDate(diff))
+  const week = []
+  for (let i = 0; i < 7; i++) {
+    week.push(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i))
+  }
+  return week
+}
+const getMonthWeek = (date, month) => {
+  const d = new Date(date)
+  const firstDayOfMonth = new Date(d.getFullYear(), month, 1)
+  const firstDayOfWeek = new Date(firstDayOfMonth)
+  firstDayOfWeek.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay() + 1)
+
+  if (firstDayOfWeek > d) {
+    firstDayOfWeek.setDate(firstDayOfWeek.getDate() - 7)
+  }
+
+  const daysDifference = Math.floor((d - firstDayOfWeek) / (24 * 60 * 60 * 1000))
+  return Math.floor(daysDifference / 7) + 1
+}
+const determineWeekMonth = (dates) => {
+  const counts = dates.reduce((acc, date) => {
+    const month = date.getMonth()
+    acc[month] = (acc[month] || 0) + 1
+    return acc
+  }, {})
+
+  const [month, count] = Object.entries(counts).reduce((max, entry) => (entry[1] > max[1] ? entry : max))
+
+  return Number(month)
+}
+const formatMonthWeek = (dates) => {
+  const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
+  const weekDates = getWeekDates(dates[0])
+  const weekMonth = determineWeekMonth(weekDates)
+  const year = weekDates[0].getFullYear()
+  const weekNumber = getMonthWeek(weekDates[0], weekMonth)
+  const month = monthNames[weekMonth]
+  const displayYear = weekMonth === 11 && weekDates[0].getMonth() === 0 ? year - 1 : year
+  return `${displayYear}年 ${month} 第${weekNumber}週`
+}
+const groupedTimelines = computed(() => {
+  const grouped = {}
+  sortedTimelines.value.forEach((timeline) => {
+    const date = new Date(timeline.date)
+    const weekDates = getWeekDates(date)
+    const key = weekDates[0].toISOString().split('T')[0]
+
+    if (!grouped[key]) {
+      grouped[key] = []
+    }
+    grouped[key].push(timeline)
+  })
+  return Object.entries(grouped).map(([key, value]) => ({
+    weekKey: key,
+    formattedWeek: formatMonthWeek(value.map((v) => new Date(v.date))),
+    days: value
+  }))
+})
+
+// 下載
 const downloadOnClick = () => {
   let dlAnchorElem = document.getElementById('downloadAnchorElem')
 
@@ -578,6 +648,7 @@ const downloadOnClick = () => {
   dlAnchorElem.click()
 }
 
+// 上傳
 async function fileOnChange(event) {
   const file = event.files[0]
 
@@ -608,71 +679,7 @@ async function fileOnChange(event) {
     console.error('請上傳 JSON 文件')
   }
 }
-
-function isSelected(rowid) {
-  return _data.value.id == rowid ? 'warn' : 'primary'
-}
-
-function deleteTask(rowid) {
-  const taskIndex = _tasks.value.findIndex((t) => t.id === rowid)
-
-  if (taskIndex === -1) return
-
-  confirm.require({
-    header: '確認刪除任務?',
-    message: `#${rowid}: ${_tasks.value[taskIndex].taskHeader}`,
-    icon: 'pi pi-info-circle',
-    rejectProps: {
-      label: '取消',
-      severity: 'secondary',
-      outlined: true
-    },
-    acceptProps: {
-      label: '刪除',
-      severity: 'danger'
-    },
-    accept: () => {
-      _tasks.value.splice(taskIndex, 1)
-
-      if (_data.value.id == rowid) {
-        let maxId = Math.max(..._tasks.value.map((item) => item.id))
-        _data.value = {
-          id: maxId + 1,
-          taskHeader: '',
-          taskUrl: '',
-          taskBranch: '',
-          times: []
-        }
-
-        saveCache()
-      }
-      saveTasks()
-    },
-    reject: () => {}
-  })
-}
-
-function deleteDate(rowdate) {
-  const taskIndex = _tasks.value.findIndex((t) => t.id === _data.value.id)
-
-  if (taskIndex === -1) return
-
-  if (rowdate) {
-    const timesIndex = _tasks.value[taskIndex].times.findIndex((t) => t.date === rowdate)
-    if (timesIndex !== -1) {
-      _tasks.value[taskIndex].times.splice(timesIndex, 1)
-    }
-
-    const dataTimeIndex = _data.value.times.findIndex((t) => t.date === rowdate)
-    if (dataTimeIndex !== -1) {
-      _data.value.times.splice(dataTimeIndex, 1)
-    }
-
-    saveTasks()
-    saveCache()
-  }
-}
-
+// 上傳驗證格式
 function validateTaskData(tasks) {
   if (!Array.isArray(tasks)) {
     console.error('tasks 必須是 array')
@@ -728,74 +735,65 @@ function validateTaskData(tasks) {
   return true
 }
 
-// 週月分群
-const getWeekDates = (date) => {
-  const d = new Date(date)
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  const monday = new Date(d.setDate(diff))
-  const week = []
-  for (let i = 0; i < 7; i++) {
-    week.push(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i))
-  }
-  return week
-}
+// 刪除
+function deleteTask(rowid) {
+  const taskIndex = _tasks.value.findIndex((t) => t.id === rowid)
 
-const getMonthWeek = (date, month) => {
-  const d = new Date(date)
-  const firstDayOfMonth = new Date(d.getFullYear(), month, 1)
-  const firstDayOfWeek = new Date(firstDayOfMonth)
-  firstDayOfWeek.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay() + 1)
+  if (taskIndex === -1) return
 
-  if (firstDayOfWeek > d) {
-    firstDayOfWeek.setDate(firstDayOfWeek.getDate() - 7)
-  }
+  confirm.require({
+    header: '確認刪除任務?',
+    message: `#${rowid}: ${_tasks.value[taskIndex].taskHeader}`,
+    icon: 'pi pi-info-circle',
+    rejectProps: {
+      label: '取消',
+      severity: 'secondary',
+      outlined: true
+    },
+    acceptProps: {
+      label: '刪除',
+      severity: 'danger'
+    },
+    accept: () => {
+      _tasks.value.splice(taskIndex, 1)
 
-  const daysDifference = Math.floor((d - firstDayOfWeek) / (24 * 60 * 60 * 1000))
-  return Math.floor(daysDifference / 7) + 1
-}
+      if (_data.value.id == rowid) {
+        let maxId = Math.max(..._tasks.value.map((item) => item.id))
+        _data.value = {
+          id: maxId + 1,
+          taskHeader: '',
+          taskUrl: '',
+          taskBranch: '',
+          times: []
+        }
 
-const determineWeekMonth = (dates) => {
-  const counts = dates.reduce((acc, date) => {
-    const month = date.getMonth()
-    acc[month] = (acc[month] || 0) + 1
-    return acc
-  }, {})
-
-  const [month, count] = Object.entries(counts).reduce((max, entry) => (entry[1] > max[1] ? entry : max))
-
-  return Number(month)
-}
-
-const formatMonthWeek = (dates) => {
-  const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
-  const weekDates = getWeekDates(dates[0])
-  const weekMonth = determineWeekMonth(weekDates)
-  const year = weekDates[0].getFullYear()
-  const weekNumber = getMonthWeek(weekDates[0], weekMonth)
-  const month = monthNames[weekMonth]
-  const displayYear = weekMonth === 11 && weekDates[0].getMonth() === 0 ? year - 1 : year
-  return `${displayYear}年 ${month} 第${weekNumber}週`
-}
-
-const groupedTimelines = computed(() => {
-  const grouped = {}
-  sortedTimelines.value.forEach((timeline) => {
-    const date = new Date(timeline.date)
-    const weekDates = getWeekDates(date)
-    const key = weekDates[0].toISOString().split('T')[0]
-
-    if (!grouped[key]) {
-      grouped[key] = []
-    }
-    grouped[key].push(timeline)
+        saveCache()
+      }
+      saveTasks()
+    },
+    reject: () => {}
   })
-  return Object.entries(grouped).map(([key, value]) => ({
-    weekKey: key,
-    formattedWeek: formatMonthWeek(value.map((v) => new Date(v.date))),
-    days: value
-  }))
-})
+}
+function deleteDate(rowdate) {
+  const taskIndex = _tasks.value.findIndex((t) => t.id === _data.value.id)
+
+  if (taskIndex === -1) return
+
+  if (rowdate) {
+    const timesIndex = _tasks.value[taskIndex].times.findIndex((t) => t.date === rowdate)
+    if (timesIndex !== -1) {
+      _tasks.value[taskIndex].times.splice(timesIndex, 1)
+    }
+
+    const dataTimeIndex = _data.value.times.findIndex((t) => t.date === rowdate)
+    if (dataTimeIndex !== -1) {
+      _data.value.times.splice(dataTimeIndex, 1)
+    }
+
+    saveTasks()
+    saveCache()
+  }
+}
 </script>
 
 <style scoped>
