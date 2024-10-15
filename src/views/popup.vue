@@ -24,7 +24,15 @@
         icon="pi pi-book"
         severity="info"
         :outlined="!showBlock.taskEditor"
-        @click="[(showBlock.taskEditor = !showBlock.taskEditor), saveCache()]"
+        @click="[toggleTaskBlock(), saveCache()]"
+      />
+      <Button
+        v-tooltip="'新增任務'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-plus"
+        severity="success"
+        :outlined="showBlock.taskEditor != 2"
+        @click="[toggleNewTask(), saveCache()]"
       />
       <Button
         v-tooltip="'時段編輯區塊'"
@@ -70,23 +78,22 @@
   </div>
   <div class="main">
     <!-- Task Info -->
-    <Panel v-if="showBlock.taskEditor">
+    <Panel v-if="showBlock.taskEditor" :pt:root:style="taskBlockColor()" pt:header:style="padding: 0;" pt:content:style="padding: 18px;">
       <div class="grid">
         <div class="col-1">
           <label for="taskId">編號</label>
           <InputNumber id="taskId" v-model="_data.id" inputClass="w-full" :min="0" size="small" :disabled="true" />
         </div>
-        <div class="col-9">
-          <label for="taskHeader">標題</label>
+        <div class="col-10">
+          <label v-if="showBlock.taskEditor == 2" for="taskHeader">新增標題</label>
+          <label v-if="showBlock.taskEditor == 1" for="taskHeader">標題</label>
           <InputText id="taskHeader" class="w-full" type="text" v-model="_data.taskHeader" @change="saveCache()" />
         </div>
         <div class="col-1">
-          <label>新增</label>
-          <Button icon="pi pi-plus" outlined raised @click="newTask()" />
-        </div>
-        <div class="col-1">
-          <label>儲存</label>
-          <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader.trim()" />
+          <label v-if="showBlock.taskEditor == 2">新增</label>
+          <label v-if="showBlock.taskEditor == 1">儲存</label>
+          <br />
+          <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader?.trim()" />
         </div>
         <div class="col-6">
           <label for="taskUrl">連結 <Button class="h-1rem w-1rem" icon="pi pi-link" severity="secondary" @click="openInNewTab(_data.taskUrl)" text size="small"></Button></label>
@@ -141,7 +148,7 @@
             <Column rowReorder class="w-1" />
             <Column field="taskHeader" header="標題" sclass="w-9">
               <template #body="slotProps">
-                <Button @click="[(_data = { ...slotProps.data }), saveCache()]" :severity="isSelected(slotProps.data.id)">
+                <Button @click="[taskListSelect(slotProps.data), saveCache()]" :severity="isSelected(slotProps.data.id)">
                   {{ slotProps.data.taskHeader }}
                 </Button>
               </template>
@@ -162,18 +169,6 @@
           <span>任務: {{ _data.taskHeader }}</span>
           <br />
           <span v-if="!sortedTimelines.length">目前沒有時數紀錄</span>
-          <!-- <Timeline
-            v-for="day in sortedTimelines"
-            :date="day.date"
-            :workTime="day.periods"
-            :restTime="[[710, 800]]"
-            :showDateAndSum="true"
-            :deleteMode="showBlock.deleteMode"
-            @click="_time.date = day.date"
-            @deleteDate="deleteDate(day.date)"
-          ></Timeline> -->
-
-          <!-- DEBUG -->
           <div class="grouped-timeline">
             <div v-for="week in groupedTimelines" :key="week.weekKey" class="mt-2">
               <Tag :value="week.formattedWeek"></Tag>
@@ -234,7 +229,7 @@ const _data = ref({
 const _time = ref({ date: convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }), periods: [] })
 const _period = ref([new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()])
 const showBlock = ref({
-  taskEditor: false,
+  taskEditor: 0,
   timeEditor: false,
   debugBlock: false,
   deleteMode: false
@@ -308,7 +303,36 @@ const deleteAllData = async () => {
 const openInNewTab = (url) => {
   window.open(url, '_blank')
 }
-const newTask = () => {
+
+let newTaskRestoreTempID = -1
+const toggleTaskBlock = () => {
+  // off
+  if (showBlock.value.taskEditor) {
+    showBlock.value.taskEditor = 0
+  }
+  // on
+  else if (!showBlock.value.taskEditor) {
+    showBlock.value.taskEditor = newTaskRestoreTempID == -1 ? 1 : 2
+  }
+}
+const toggleNewTask = () => {
+  // off
+  if (showBlock.value.taskEditor == 2) {
+    if (_tasks.value.filter((t) => t.id == newTaskRestoreTempID).length) {
+      _data.value = { ..._tasks.value.filter((t) => t.id == newTaskRestoreTempID)[0] }
+      showBlock.value.taskEditor = 1
+    } else {
+      showBlock.value.taskEditor = 0
+    }
+
+    return
+  }
+  // on
+  else if (!showBlock.value.taskEditor || showBlock.value.taskEditor == 1) {
+    showBlock.value.taskEditor = 2
+    newTaskRestoreTempID = _data.value.id
+  }
+
   if (!_tasks.value.filter((t) => t.id == _data.value.id).length) {
     return
   }
@@ -329,6 +353,22 @@ const newTask = () => {
     times: []
   }
 }
+const taskBlockColor = () => {
+  if (showBlock.value.taskEditor == 1) {
+    return 'border-color: #F97316; border-width: 2px;'
+  } else if (showBlock.value.taskEditor == 2) {
+    return 'border-color: #22C55E; border-width: 2px;'
+  }
+}
+
+const taskListSelect = (data) => {
+  _data.value = data
+  newTaskRestoreTempID = data.id
+  if (showBlock.value.taskEditor == 2) {
+    showBlock.value.taskEditor = 1
+  }
+}
+
 const saveTaskInfo = () => {
   const index = _tasks.value.findIndex((t) => t.id == _data.value.id)
 
@@ -336,6 +376,11 @@ const saveTaskInfo = () => {
     _tasks.value[index] = { ..._data.value }
   } else {
     _tasks.value.push({ ..._data.value })
+  }
+
+  if (showBlock.value.taskEditor == 2) {
+    showBlock.value.taskEditor = 1
+    tempData = null
   }
 
   saveTasks()
