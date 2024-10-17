@@ -91,7 +91,7 @@
       </div>
       <div class="grid">
         <div class="col-6">
-          <label for="taskUrl">連結 <Button class="h-1rem w-1rem" icon="pi pi-link" severity="secondary" @click="openInNewTab(_data.taskUrl)" text size="small"></Button></label>
+          <label for="taskUrl"> 連結 <Button class="h-1rem w-1rem" icon="pi pi-link" severity="secondary" @click="if (_data.taskUrl?.trim()) openInNewTab(_data.taskUrl);" text size="small" /> </label>
           <InputText id="taskUrl" class="w-full" type="text" v-model="_data.taskUrl" @change="saveCache()" />
         </div>
         <div class="col-6">
@@ -114,8 +114,16 @@
               class="h-1rem"
               outlined
               raised
+              @click="_period = [new Date().getHours() * 60 + new Date().getMinutes(), new Date().getHours() * 60 + new Date().getMinutes() + 60]"
+              label="現在為開始"
+              size="small" />
+            &nbsp;
+            <Button
+              class="h-1rem"
+              outlined
+              raised
               @click="_period = [new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()]"
-              label="現在起點"
+              label="現在為結束"
               size="small" />
           </label>
           <div class="w-full">
