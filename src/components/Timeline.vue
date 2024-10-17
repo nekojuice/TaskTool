@@ -16,7 +16,7 @@
         "
         :key="index"
         class="time-block"
-        :style="getPeriodStyle(period, '#35B303')"></div>
+        :style="getPeriodStyle(period, '#35B303')" @dblclick="console.log('123');"></div>
       <div
         v-for="period in props.restTime"
         v-tooltip.bottom="`午休${Math.floor(period[0] / 60)}:${period[0] % 60}-${Math.floor(period[1] / 60)}:${period[1] % 60}`"
@@ -79,7 +79,7 @@ const calHour = computed(() => {
   position: relative;
   width: 100%;
   height: 10px;
-  background-color: #e0e0e0;
+  background-color: rgba(204, 204, 204, 0.35);
   overflow: hidden;
 }
 

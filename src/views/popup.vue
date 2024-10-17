@@ -2,14 +2,14 @@
   <div class="sidenav p-0 flex justify-content-center flex-wrap">
     <div class="w-2rem flex justify-content-center align-content-start flex-wrap">
       <Button
-        v-tooltip="'開起debug區塊'"
+        v-tooltip="'開啟debug模式'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-ellipsis-v"
         severity="secondary"
         :outlined="!showBlock.debugBlock"
         @click="showBlock.debugBlock = !showBlock.debugBlock" />
       <Button
-        v-tooltip="'在新瀏覽器標籤開啟'"
+        v-tooltip="'在新瀏覽器標籤開啟小工具'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-window-maximize"
         severity="secondary"
@@ -17,7 +17,7 @@
         @click="openInNewTab('/index.html')" />
       <div class="h-2rem w-2rem"></div>
       <Button
-        v-tooltip="'任務編輯區塊'"
+        v-tooltip="'任務內容編輯器'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-book"
         severity="info"
@@ -31,7 +31,7 @@
         :outlined="showBlock.taskEditor != 2"
         @click="[toggleNewTask(), saveCache()]" />
       <Button
-        v-tooltip="'時段編輯區塊'"
+        v-tooltip="'時間軸編輯器'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-clock"
         severity="info"
@@ -57,7 +57,7 @@
         :maxFileSize="1000000"
         @select="fileOnChange($event)">
       </FileUpload>
-      <Button v-tooltip="'下載資料'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
+      <Button v-tooltip="'下載資料(ctrl + s)'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
       <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
     </div>
     <!-- debugblock -->
@@ -101,7 +101,7 @@
       </div>
     </Panel>
     <!-- Time Editor -->
-    <Panel v-if="showBlock.timeEditor" class="pl-3 pr-3" :pt:root:style="taskBlockColor() + 'margin-top: -2px;'">
+    <Panel v-if="showBlock.timeEditor" class="pl-3 pr-3" :pt:root:style="timeBlockColor() + 'margin-top: -2px;'">
       <div class="grid">
         <div class="col-3 pb-0">
           <label>任務日期&nbsp;<Button class="h-1rem" outlined raised @click="_time.date = convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })" label="今日" size="small" /></label>
@@ -135,35 +135,30 @@
           </div>
         </div>
         <div class="col-2 pb-0">
-          <label v-if="showBlock.timeEditor == 1">新增模式</label>
+          <!-- <label v-if="showBlock.timeEditor == 1">新增模式</label>
           <label v-if="showBlock.timeEditor == 2">扣除模式</label>
           <br />
-          <ToggleSwitch v-model="showBlock.timeEditor" :falseValue="1" :trueValue="2" :pt:slider:style="showBlock.timeEditor == 2 ? 'background: #EF4444' : 'background: #27C662'"></ToggleSwitch>
+          <ToggleSwitch v-model="showBlock.timeEditor" :falseValue="1" :trueValue="2" :pt:slider:style="showBlock.timeEditor == 2 ? 'background: #EF4444' : 'background: #27C662'"></ToggleSwitch> -->
         </div>
         <div class="col-1 pb-0">
           <label v-if="showBlock.timeEditor == 1">加入</label>
-          <label v-if="showBlock.timeEditor == 2">扣除</label>
+          <!-- <label v-if="showBlock.timeEditor == 2">扣除</label> -->
           <br />
           <Button icon="pi pi-save" :severity="!_data.taskHeader?.trim() ? 'secondary' : 'warn'" outlined raised @click="saveTime" :disabled="!_data.taskHeader?.trim()" />
         </div>
         <div class="col-12 p-0">
           <Slider
-            class="col-12 z-5"
+            class="col-12"
             v-model="_period"
             range
             :step="1"
             :max="1441"
-            pt:root:style="height: 20px"
-            pt:startHandler:style="margin-top: -15px; z-index: 10; border-radius:0; background:transparent; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent;  border-top: 12px solid gray;"
-            pt:endHandler:style="margin-top: 3px; z-index: 10; border-radius:0; background:transparent; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 12px solid gray;"
-            :pt:range:style="
-              showBlock.timeEditor == 2
-                ? 'background: repeating-linear-gradient(45deg,rgba(239, 68, 68, 0.5),rgba(239, 68, 68, 0.5) 10px,transparent 10px,transparent 15px);'
-                : 'background: rgba(16, 185, 129, 0.5);'
-            "
+            pt:startHandler:style="margin-left: -10px; margin-top: -20px; z-index: 10; border-radius: 0; background: transparent; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 10px solid gray;"
+            pt:endHandler:style="margin-left: 0px; margin-top: -20px; z-index: 10; z-index: 10; border-radius: 0; background: transparent; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid gray;"
+            pt:range:style="height: 10px; margin-top: 10px; background: repeating-linear-gradient(45deg, rgba(249, 115, 22, 1),  rgba(249, 115, 22, 0.5) 4px, transparent 4px, transparent 7px);"
             style="background: rgba(0, 0, 0, 0)" />
           <br />
-          <Timeline class="col-12 p-0" :workTime="selectedDateTimeline?.periods" :restTime="[[710, 800]]" :showScale="true" style="margin-top: -39px"></Timeline>
+          <Timeline class="col-12 p-0" :workTime="selectedDateTimeline?.periods" :restTime="[[710, 800]]" :showScale="true" style="margin-top: -30px"></Timeline>
         </div>
       </div>
     </Panel>
@@ -227,7 +222,7 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -250,6 +245,11 @@ import { convertDateToString } from '../service/commonService';
 onMounted(() => {
   loadCache();
   loadTasks();
+  window.addEventListener('keydown', handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown);
 });
 
 const confirm = useConfirm();
@@ -393,6 +393,13 @@ const taskBlockColor = () => {
   if (showBlock.value.taskEditor == 1) {
     return 'border-color: #F97316; border-width: 2px;';
   } else if (showBlock.value.taskEditor == 2) {
+    return 'border-color: #22C55E; border-width: 2px;';
+  }
+};
+const timeBlockColor = () => {
+  if (_tasks.value.filter((t) => t.id == _data.value.id).length) {
+    return 'border-color: #F97316; border-width: 2px;';
+  } else {
     return 'border-color: #22C55E; border-width: 2px;';
   }
 };
@@ -821,6 +828,13 @@ function deleteDate(rowdate) {
     saveCache();
   }
 }
+
+const handleKeydown = (event) => {
+  if (event.ctrlKey && event.key === 's') {
+    event.preventDefault(); // 阻止瀏覽器預設的 Ctrl+S 行為 (存檔)
+    downloadOnClick();
+  }
+};
 </script>
 
 <style scoped>
