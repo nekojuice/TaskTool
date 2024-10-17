@@ -7,16 +7,14 @@
         icon="pi pi-ellipsis-v"
         severity="secondary"
         :outlined="!showBlock.debugBlock"
-        @click="showBlock.debugBlock = !showBlock.debugBlock"
-      />
+        @click="showBlock.debugBlock = !showBlock.debugBlock" />
       <Button
         v-tooltip="'在新瀏覽器標籤開啟'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-window-maximize"
         severity="secondary"
         outlined
-        @click="openInNewTab('/index.html')"
-      />
+        @click="openInNewTab('/index.html')" />
       <div class="h-2rem w-2rem"></div>
       <Button
         v-tooltip="'任務編輯區塊'"
@@ -24,32 +22,28 @@
         icon="pi pi-book"
         severity="info"
         :outlined="!showBlock.taskEditor"
-        @click="[toggleTaskBlock(), saveCache()]"
-      />
+        @click="[toggleTaskBlock(), saveCache()]" />
       <Button
         v-tooltip="'新增任務'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-plus"
         severity="success"
         :outlined="showBlock.taskEditor != 2"
-        @click="[toggleNewTask(), saveCache()]"
-      />
+        @click="[toggleNewTask(), saveCache()]" />
       <Button
         v-tooltip="'時段編輯區塊'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-clock"
         severity="info"
         :outlined="!showBlock.timeEditor"
-        @click="[(showBlock.timeEditor = !showBlock.timeEditor), saveCache()]"
-      />
+        @click="[(showBlock.timeEditor = !showBlock.timeEditor), saveCache()]" />
       <Button
         v-tooltip="'顯示刪除按鈕'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-unlock"
         severity="danger"
         :outlined="!showBlock.deleteMode"
-        @click="[(showBlock.deleteMode = !showBlock.deleteMode), saveCache()]"
-      />
+        @click="[(showBlock.deleteMode = !showBlock.deleteMode), saveCache()]" />
       <div class="h-2rem w-2rem"></div>
       <FileUpload
         v-tooltip="'上傳並覆蓋資料'"
@@ -61,8 +55,7 @@
         :chooseButtonProps="{ label: '', class: 'h-2rem w-2rem flex align-items-center justify-content-center', severity: 'danger', outlined: true }"
         accept=".json"
         :maxFileSize="1000000"
-        @select="fileOnChange($event)"
-      >
+        @select="fileOnChange($event)">
       </FileUpload>
       <Button v-tooltip="'下載資料'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
       <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
@@ -93,7 +86,7 @@
           <label v-if="showBlock.taskEditor == 2">新增</label>
           <label v-if="showBlock.taskEditor == 1">儲存</label>
           <br />
-          <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader?.trim()" />
+          <Button icon="pi pi-save" :severity="!_data.taskHeader?.trim() ? 'secondary' : 'warn'" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader?.trim()" />
         </div>
       </div>
       <div class="grid">
@@ -115,15 +108,16 @@
           <InputTextDate class="w-full" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>&nbsp;
         </div>
         <div class="col-8">
-          <label
-            >時段&nbsp;<Button
+          <label>
+            時段&nbsp;
+            <Button
               class="h-1rem"
               outlined
               raised
               @click="_period = [new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()]"
-              label="現在"
-              size="small"
-          /></label>
+              label="現在起點"
+              size="small" />
+          </label>
           <div class="w-full">
             <InputNumber v-model="computedStartTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
             <InputNumber v-model="computedStartTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
@@ -134,7 +128,8 @@
         </div>
         <div class="col-1">
           <label>加入</label>
-          <Button icon="pi pi-save" severity="danger" outlined raised @click="saveTime" />
+          <br />
+          <Button icon="pi pi-save" :severity="!_data.taskHeader?.trim() ? 'secondary' : 'warn'" outlined raised @click="saveTime" :disabled="!_data.taskHeader?.trim()" />
         </div>
         <Slider class="mt-1 col-12" v-model="_period" range :step="1" :max="1441" pt:startHandler:style="margin-top: 8px; z-index: 10;" pt:endHandler:style="margin-top: 8px; z-index: 10;" />
         <br />
@@ -147,7 +142,7 @@
       <div class="grid">
         <div class="col">
           <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
-            <Column rowReorder class="pr-0" style="width: 36px;" />
+            <Column rowReorder class="pr-0" style="width: 36px" />
             <Column v-if="showBlock.debugBlock" header="編號" class="w-1 white-space-nowrap">
               <template #body="slotProps">
                 {{ slotProps.data.id }}
@@ -191,8 +186,7 @@
                   :showDateAndSum="true"
                   :deleteMode="showBlock.deleteMode"
                   @click="_time.date = day.date"
-                  @deleteDate="deleteDate(day.date)"
-                ></Timeline>
+                  @deleteDate="deleteDate(day.date)"></Timeline>
               </div>
             </div>
           </div>
@@ -202,61 +196,61 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue';
 
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Slider from 'primevue/slider'
-import InputNumber from 'primevue/inputnumber'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import FileUpload from 'primevue/fileupload'
-import Panel from 'primevue/panel'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Tag from 'primevue/tag'
-import { useConfirm } from 'primevue/useconfirm'
+import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
+import Slider from 'primevue/slider';
+import InputNumber from 'primevue/inputnumber';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import FileUpload from 'primevue/fileupload';
+import Panel from 'primevue/panel';
+import ConfirmDialog from 'primevue/confirmdialog';
+import Tag from 'primevue/tag';
+import { useConfirm } from 'primevue/useconfirm';
 
-import InputTextDate from '@/components/InputTextDate.vue'
-import Timeline from '@/components/Timeline.vue'
+import InputTextDate from '@/components/InputTextDate.vue';
+import Timeline from '@/components/Timeline.vue';
 
-import { convertDateToString } from '../service/commonService'
+import { convertDateToString } from '../service/commonService';
 
 onMounted(() => {
-  loadCache()
-  loadTasks()
-})
+  loadCache();
+  loadTasks();
+});
 
-const confirm = useConfirm()
+const confirm = useConfirm();
 
-const _tasks = ref([])
+const _tasks = ref([]);
 const _data = ref({
   id: 0,
   taskHeader: '',
   taskUrl: '',
   taskBranch: '',
   times: []
-})
-const _time = ref({ date: convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }), periods: [] })
-const _period = ref([new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()])
+});
+const _time = ref({ date: convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }), periods: [] });
+const _period = ref([new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()]);
 const showBlock = ref({
   taskEditor: 0,
   timeEditor: false,
   debugBlock: false,
   deleteMode: false
-})
+});
 
 const showStorageData = () => {
   chrome.runtime.sendMessage({ action: 'getStorage', key: 'cache' }, (response) => {
-    console.log('cache', response.message)
-  })
+    console.log('cache', response.message);
+  });
   chrome.runtime.sendMessage({ action: 'getStorage', key: 'tasks' }, (response) => {
-    console.log('tasks', response.message)
-  })
-}
+    console.log('tasks', response.message);
+  });
+};
 const loadCache = async () => {
   chrome.runtime.sendMessage({ action: 'getStorage', key: 'cache' }, (response) => {
     if (response.message) {
-      _data.value = response.message
+      _data.value = response.message;
     } else {
       _data.value = {
         id: 0,
@@ -264,95 +258,95 @@ const loadCache = async () => {
         taskUrl: '',
         taskBranch: '',
         times: []
-      }
+      };
     }
-  })
+  });
   chrome.runtime.sendMessage({ action: 'getStorage', key: 'UIcache' }, (response) => {
     if (response.message) {
-      showBlock.value = response.message
-      showBlock.value.deleteMode = false
+      showBlock.value = response.message;
+      showBlock.value.deleteMode = false;
     } else {
       showBlock.value = {
         taskEditor: false,
         timeEditor: false,
         debugBlock: false,
         deleteMode: false
-      }
+      };
     }
-  })
-}
+  });
+};
 const saveCache = () => {
   chrome.runtime.sendMessage({ action: 'setStorage', obj: { cache: _data.value } }, (response) => {
-    console.log(response.message)
-  })
+    console.log(response.message);
+  });
   chrome.runtime.sendMessage({ action: 'setStorage', obj: { UIcache: showBlock.value } }, (response) => {
-    console.log(response.message)
-  })
-}
+    console.log(response.message);
+  });
+};
 const loadTasks = async () => {
   chrome.runtime.sendMessage({ action: 'getStorage', key: 'tasks' }, (response) => {
     if (response.message) {
-      _tasks.value = response.message
+      _tasks.value = response.message;
     } else {
-      _tasks.value = []
+      _tasks.value = [];
     }
-  })
-}
+  });
+};
 const saveTasks = () => {
   chrome.runtime.sendMessage({ action: 'setStorage', obj: { tasks: _tasks.value } }, (response) => {
-    console.log(response.message)
-  })
-}
+    console.log(response.message);
+  });
+};
 const deleteAllData = async () => {
   chrome.runtime.sendMessage({ action: 'deleteStorage' }, async (response) => {
-    console.log(response.message)
-    await loadTasks()
-    await loadCache()
-  })
-}
+    console.log(response.message);
+    await loadTasks();
+    await loadCache();
+  });
+};
 const openInNewTab = (url) => {
-  window.open(url, '_blank')
-}
+  window.open(url, '_blank');
+};
 
-const newTaskRestoreTempID = ref(-1)
+const newTaskRestoreTempID = ref(-1);
 const toggleTaskBlock = () => {
   // off
   if (showBlock.value.taskEditor) {
-    showBlock.value.taskEditor = 0
+    showBlock.value.taskEditor = 0;
   }
   // on
   else if (!showBlock.value.taskEditor) {
-    showBlock.value.taskEditor = _tasks.value.filter((t) => t.id == _data.value.id).length ? 1 : 2
+    showBlock.value.taskEditor = _tasks.value.filter((t) => t.id == _data.value.id).length ? 1 : 2;
   }
-}
+};
 const toggleNewTask = () => {
   // off
   if (showBlock.value.taskEditor == 2) {
     if (_tasks.value.filter((t) => t.id == newTaskRestoreTempID.value).length) {
-      _data.value = { ..._tasks.value.filter((t) => t.id == newTaskRestoreTempID.value)[0] }
-      showBlock.value.taskEditor = 1
+      _data.value = { ..._tasks.value.filter((t) => t.id == newTaskRestoreTempID.value)[0] };
+      showBlock.value.taskEditor = 1;
     } else {
-      showBlock.value.taskEditor = 0
+      showBlock.value.taskEditor = 0;
     }
 
-    return
+    return;
   }
   // on
   else if (!showBlock.value.taskEditor || showBlock.value.taskEditor == 1) {
-    showBlock.value.taskEditor = 2
-    newTaskRestoreTempID.value = _data.value.id
+    showBlock.value.taskEditor = 2;
+    newTaskRestoreTempID.value = _data.value.id;
   }
 
   if (!_tasks.value.filter((t) => t.id == _data.value.id).length) {
-    return
+    return;
   }
 
-  let maxId = 0
+  let maxId = 0;
 
   if (_tasks.value.length === 0) {
-    maxId = 0
+    maxId = 0;
   } else {
-    maxId = Math.max(..._tasks.value.map((item) => item.id))
+    maxId = Math.max(..._tasks.value.map((item) => item.id));
   }
 
   _data.value = {
@@ -361,390 +355,386 @@ const toggleNewTask = () => {
     taskUrl: '',
     taskBranch: '',
     times: []
-  }
-}
+  };
+};
 const taskBlockColor = () => {
   if (showBlock.value.taskEditor == 1) {
-    return 'border-color: #F97316; border-width: 2px;'
+    return 'border-color: #F97316; border-width: 2px;';
   } else if (showBlock.value.taskEditor == 2) {
-    return 'border-color: #22C55E; border-width: 2px;'
+    return 'border-color: #22C55E; border-width: 2px;';
   }
-}
+};
 
 const taskListSelect = (data) => {
-  _data.value = data
-  newTaskRestoreTempID.value = data.id
+  _data.value = data;
+  newTaskRestoreTempID.value = data.id;
   if (showBlock.value.taskEditor == 2) {
-    showBlock.value.taskEditor = 1
+    showBlock.value.taskEditor = 1;
   }
-}
+};
 function taskListSelectedColor(rowid) {
-  return _data.value.id == rowid ? 'warn' : 'primary'
+  return _data.value.id == rowid ? 'warn' : 'primary';
 }
 
 const saveTaskInfo = () => {
-  const index = _tasks.value.findIndex((t) => t.id == _data.value.id)
+  const index = _tasks.value.findIndex((t) => t.id == _data.value.id);
 
   if (index !== -1) {
-    _tasks.value[index] = { ..._data.value }
+    _tasks.value[index] = { ..._data.value };
   } else {
-    _tasks.value.push({ ..._data.value })
+    _tasks.value.push({ ..._data.value });
   }
 
   if (showBlock.value.taskEditor == 2) {
-    showBlock.value.taskEditor = 1
-    newTaskRestoreTempID.value = -1
+    showBlock.value.taskEditor = 1;
+    newTaskRestoreTempID.value = -1;
   }
 
-  saveTasks()
-}
+  saveTasks();
+};
 
 const saveTime = () => {
-  const taskIndex = _tasks.value.findIndex((t) => t.id == _data.value.id)
-  const timeIndex = _tasks.value[taskIndex]?.times.findIndex((t) => t.date == _time.value.date) ?? -1
-  console.log('taskIndex', taskIndex)
-  console.log('timeIndex', timeIndex)
+  const taskIndex = _tasks.value.findIndex((t) => t.id == _data.value.id);
+  const timeIndex = _tasks.value[taskIndex]?.times.findIndex((t) => t.date == _time.value.date) ?? -1;
 
   if (timeIndex == -1) {
-    _time.value.periods = removeLaunchPeriod([..._period.value])
+    _time.value.periods = removeLaunchPeriod([..._period.value]);
 
-    _data.value.times.push({ ..._time.value })
+    _data.value.times.push({ ..._time.value });
 
     if (taskIndex == -1) {
-      _tasks.value.push({ ..._data.value })
+      _tasks.value.push({ ..._data.value });
     } else {
-      _tasks.value[taskIndex].times = _data.value.times
+      _tasks.value[taskIndex].times = _data.value.times;
     }
   } else {
-    const mergedPeriod = processWorkPeriods([..._tasks.value[taskIndex].times[timeIndex].periods, [..._period.value]])
-    console.log('mergedPeriod', mergedPeriod)
-
-    _tasks.value[taskIndex].times[timeIndex].periods = mergedPeriod
+    const mergedPeriod = processWorkPeriods([..._tasks.value[taskIndex].times[timeIndex].periods, [..._period.value]]);
+    _tasks.value[taskIndex].times[timeIndex].periods = mergedPeriod;
   }
 
-  saveTasks()
-  saveCache()
-}
+  saveTasks();
+  saveCache();
+};
 
 function processWorkPeriods(workPeriods) {
-  const lunchBreakStart = 710
-  const lunchBreakEnd = 800
+  const lunchBreakStart = 710;
+  const lunchBreakEnd = 800;
 
   // Step 1: Sort periods by starting time
-  workPeriods.sort((a, b) => a[0] - b[0])
+  workPeriods.sort((a, b) => a[0] - b[0]);
 
-  const mergedPeriods = []
-  let currentPeriod = workPeriods[0]
+  const mergedPeriods = [];
+  let currentPeriod = workPeriods[0];
 
   for (let i = 1; i < workPeriods.length; i++) {
-    const [currentStart, currentEnd] = currentPeriod
-    const [nextStart, nextEnd] = workPeriods[i]
+    const [currentStart, currentEnd] = currentPeriod;
+    const [nextStart, nextEnd] = workPeriods[i];
 
     // Step 2: Merge overlapping periods
     if (currentEnd >= nextStart) {
-      currentPeriod = [currentStart, Math.max(currentEnd, nextEnd)]
+      currentPeriod = [currentStart, Math.max(currentEnd, nextEnd)];
     } else {
-      mergedPeriods.push(currentPeriod)
-      currentPeriod = workPeriods[i]
+      mergedPeriods.push(currentPeriod);
+      currentPeriod = workPeriods[i];
     }
   }
-  mergedPeriods.push(currentPeriod)
+  mergedPeriods.push(currentPeriod);
 
   // Step 3: Remove lunch break time (710 to 800)
-  const result = []
+  const result = [];
   mergedPeriods.forEach(([start, end]) => {
     if (start < lunchBreakStart && end > lunchBreakEnd) {
-      result.push([start, lunchBreakStart], [lunchBreakEnd, end])
+      result.push([start, lunchBreakStart], [lunchBreakEnd, end]);
     } else if (end > lunchBreakStart && start < lunchBreakEnd) {
-      if (start < lunchBreakStart) result.push([start, lunchBreakStart])
-      if (end > lunchBreakEnd) result.push([lunchBreakEnd, end])
+      if (start < lunchBreakStart) result.push([start, lunchBreakStart]);
+      if (end > lunchBreakEnd) result.push([lunchBreakEnd, end]);
     } else {
-      result.push([start, end])
+      result.push([start, end]);
     }
-  })
+  });
 
-  return result
+  return result;
 }
 
 const removeLaunchPeriod = ([start, end]) => {
-  const lunchBreakStart = 710
-  const lunchBreakEnd = 800
-  const result = []
+  const lunchBreakStart = 710;
+  const lunchBreakEnd = 800;
+  const result = [];
 
   if (start < lunchBreakStart && end > lunchBreakEnd) {
-    result.push([start, lunchBreakStart], [lunchBreakEnd, end])
+    result.push([start, lunchBreakStart], [lunchBreakEnd, end]);
   } else if (end > lunchBreakStart && start < lunchBreakEnd) {
-    if (start < lunchBreakStart) result.push([start, lunchBreakStart])
-    if (end > lunchBreakEnd) result.push([lunchBreakEnd, end])
+    if (start < lunchBreakStart) result.push([start, lunchBreakStart]);
+    if (end > lunchBreakEnd) result.push([lunchBreakEnd, end]);
   } else {
-    result.push([start, end])
+    result.push([start, end]);
   }
 
-  return result
-}
+  return result;
+};
 
 const onRowReorder = (event) => {
-  const reorderedTasks = event.value
-  _tasks.value = reorderedTasks
+  const reorderedTasks = event.value;
+  _tasks.value = reorderedTasks;
 
-  saveTaskInfo()
-}
+  saveTaskInfo();
+};
 
 const calEffort = (workData) => {
   let totalMinutes = workData.reduce((totalMinutes, day) => {
     const dayMinutes = day.periods.reduce((dayTotal, period) => {
-      const [start, end] = period
-      return dayTotal + (end - start)
-    }, 0)
-    return totalMinutes + dayMinutes
-  }, 0)
+      const [start, end] = period;
+      return dayTotal + (end - start);
+    }, 0);
+    return totalMinutes + dayMinutes;
+  }, 0);
 
-  const personDays = Math.ceil(totalMinutes / 60) * 0.125
+  const personDays = Math.ceil(totalMinutes / 60) * 0.125;
 
-  return personDays
-}
+  return personDays;
+};
 
 const computedStartTimeHour = computed({
   get() {
-    const tick = _period.value[0]
+    const tick = _period.value[0];
 
-    return Math.floor(tick / 60)
+    return Math.floor(tick / 60);
   },
   set(value) {
-    const tick = _period.value[0]
-    const minuteValue = tick % 60
+    const tick = _period.value[0];
+    const minuteValue = tick % 60;
 
-    _period.value[0] = +value * 60 + minuteValue
+    _period.value[0] = +value * 60 + minuteValue;
   }
-})
+});
 const computedStartTimeMinute = computed({
   get() {
-    const tick = _period.value[0]
+    const tick = _period.value[0];
 
-    return tick % 60
+    return tick % 60;
   },
   set(value) {
-    const tick = _period.value[0]
-    const hourValue = Math.floor(tick / 60)
+    const tick = _period.value[0];
+    const hourValue = Math.floor(tick / 60);
 
-    _period.value[0] = hourValue * 60 + +value
+    _period.value[0] = hourValue * 60 + +value;
   }
-})
+});
 const computedEndTimeHour = computed({
   get() {
-    const tick = _period.value[1]
+    const tick = _period.value[1];
 
-    return Math.floor(tick / 60)
+    return Math.floor(tick / 60);
   },
   set(value) {
-    const tick = _period.value[1]
-    const minuteValue = tick % 60
+    const tick = _period.value[1];
+    const minuteValue = tick % 60;
 
-    _period.value[1] = +value * 60 + minuteValue
+    _period.value[1] = +value * 60 + minuteValue;
   }
-})
+});
 const computedEndTimeMinute = computed({
   get() {
-    const tick = _period.value[1]
+    const tick = _period.value[1];
 
-    return tick % 60
+    return tick % 60;
   },
   set(value) {
-    const tick = _period.value[1]
-    const hourValue = Math.floor(tick / 60)
+    const tick = _period.value[1];
+    const hourValue = Math.floor(tick / 60);
 
-    _period.value[1] = hourValue * 60 + +value
+    _period.value[1] = hourValue * 60 + +value;
   }
-})
+});
 watch(
   () => _period.value,
   (period) => {
-    period[0] = period[0] < 0 ? 0 : period[0]
-    period[1] = period[1] > 1440 ? 1440 : period[1]
+    period[0] = period[0] < 0 ? 0 : period[0];
+    period[1] = period[1] > 1440 ? 1440 : period[1];
 
     if (period[0] > 1425) {
-      period[0] = 1425
-      period[1] = 1440
+      period[0] = 1425;
+      period[1] = 1440;
     }
     if (period[0] >= period[1] && period[0] <= 1425) {
-      period[1] = period[0] + 15
+      period[1] = period[0] + 15;
     }
   }
-)
+);
 
 const selectedDateTimeline = computed(() => {
-  return _data.value.times.filter((t) => t.date == _time.value.date)[0]
-})
+  return _data.value.times.filter((t) => t.date == _time.value.date)[0];
+});
 
-const sortedTimelines = computed(() => _data.value.times.sort((a, b) => (a.date > b.date ? 1 : b.date > a.date ? -1 : 0)))
+const sortedTimelines = computed(() => _data.value.times.sort((a, b) => (a.date > b.date ? 1 : b.date > a.date ? -1 : 0)));
 
 // 週月分群
 const getWeekDates = (date) => {
-  const d = new Date(date)
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  const monday = new Date(d.setDate(diff))
-  const week = []
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d.setDate(diff));
+  const week = [];
   for (let i = 0; i < 7; i++) {
-    week.push(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i))
+    week.push(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i));
   }
-  return week
-}
+  return week;
+};
 const getMonthWeek = (date, month) => {
-  const d = new Date(date)
-  const firstDayOfMonth = new Date(d.getFullYear(), month, 1)
-  const firstDayOfWeek = new Date(firstDayOfMonth)
-  firstDayOfWeek.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay() + 1)
+  const d = new Date(date);
+  const firstDayOfMonth = new Date(d.getFullYear(), month, 1);
+  const firstDayOfWeek = new Date(firstDayOfMonth);
+  firstDayOfWeek.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay() + 1);
 
   if (firstDayOfWeek > d) {
-    firstDayOfWeek.setDate(firstDayOfWeek.getDate() - 7)
+    firstDayOfWeek.setDate(firstDayOfWeek.getDate() - 7);
   }
 
-  const daysDifference = Math.floor((d - firstDayOfWeek) / (24 * 60 * 60 * 1000))
-  return Math.floor(daysDifference / 7) + 1
-}
+  const daysDifference = Math.floor((d - firstDayOfWeek) / (24 * 60 * 60 * 1000));
+  return Math.floor(daysDifference / 7) + 1;
+};
 const determineWeekMonth = (dates) => {
   const counts = dates.reduce((acc, date) => {
-    const month = date.getMonth()
-    acc[month] = (acc[month] || 0) + 1
-    return acc
-  }, {})
+    const month = date.getMonth();
+    acc[month] = (acc[month] || 0) + 1;
+    return acc;
+  }, {});
 
-  const [month, count] = Object.entries(counts).reduce((max, entry) => (entry[1] > max[1] ? entry : max))
+  const [month, count] = Object.entries(counts).reduce((max, entry) => (entry[1] > max[1] ? entry : max));
 
-  return Number(month)
-}
+  return Number(month);
+};
 const formatMonthWeek = (dates) => {
-  const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
-  const weekDates = getWeekDates(dates[0])
-  const weekMonth = determineWeekMonth(weekDates)
-  const year = weekDates[0].getFullYear()
-  const weekNumber = getMonthWeek(weekDates[0], weekMonth)
-  const month = monthNames[weekMonth]
-  const displayYear = weekMonth === 11 && weekDates[0].getMonth() === 0 ? year - 1 : year
-  return `${displayYear}年 ${month} 第${weekNumber}週`
-}
+  const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+  const weekDates = getWeekDates(dates[0]);
+  const weekMonth = determineWeekMonth(weekDates);
+  const year = weekDates[0].getFullYear();
+  const weekNumber = getMonthWeek(weekDates[0], weekMonth);
+  const month = monthNames[weekMonth];
+  const displayYear = weekMonth === 11 && weekDates[0].getMonth() === 0 ? year - 1 : year;
+  return `${displayYear}年 ${month} 第${weekNumber}週`;
+};
 const groupedTimelines = computed(() => {
-  const grouped = {}
+  const grouped = {};
   sortedTimelines.value.forEach((timeline) => {
-    const date = new Date(timeline.date)
-    const weekDates = getWeekDates(date)
-    const key = weekDates[0].toISOString().split('T')[0]
+    const date = new Date(timeline.date);
+    const weekDates = getWeekDates(date);
+    const key = weekDates[0].toISOString().split('T')[0];
 
     if (!grouped[key]) {
-      grouped[key] = []
+      grouped[key] = [];
     }
-    grouped[key].push(timeline)
-  })
+    grouped[key].push(timeline);
+  });
   return Object.entries(grouped).map(([key, value]) => ({
     weekKey: key,
     formattedWeek: formatMonthWeek(value.map((v) => new Date(v.date))),
     days: value
-  }))
-})
+  }));
+});
 
 // 下載
 const downloadOnClick = () => {
-  let dlAnchorElem = document.getElementById('downloadAnchorElem')
+  let dlAnchorElem = document.getElementById('downloadAnchorElem');
 
-  var dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_tasks.value))
-  dlAnchorElem.setAttribute('href', dataStr)
-  dlAnchorElem.setAttribute('download', `taskdata-${new Date().toLocaleDateString().replaceAll('/', '-')}.json`)
-  dlAnchorElem.click()
-}
+  var dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_tasks.value));
+  dlAnchorElem.setAttribute('href', dataStr);
+  dlAnchorElem.setAttribute('download', `taskdata-${new Date().toLocaleDateString().replaceAll('/', '-')}.json`);
+  dlAnchorElem.click();
+};
 
 // 上傳
 async function fileOnChange(event) {
-  const file = event.files[0]
+  const file = event.files[0];
 
   if (file && file.type === 'application/json') {
-    const reader = new FileReader()
+    const reader = new FileReader();
 
     reader.onload = (e) => {
       try {
-        const jsonData = JSON.parse(e.target.result)
+        const jsonData = JSON.parse(e.target.result);
 
         if (!validateTaskData(jsonData)) {
-          return
+          return;
         }
 
-        _tasks.value = jsonData
-        saveTasks()
+        _tasks.value = jsonData;
+        saveTasks();
       } catch (error) {
-        console.error('無法解析 JSON 文件:', error)
+        console.error('無法解析 JSON 文件:', error);
       }
-    }
+    };
 
     reader.onerror = (e) => {
-      console.error('文件讀取錯誤:', e)
-    }
+      console.error('文件讀取錯誤:', e);
+    };
 
-    reader.readAsText(file)
+    reader.readAsText(file);
   } else {
-    console.error('請上傳 JSON 文件')
+    console.error('請上傳 JSON 文件');
   }
 }
 // 上傳驗證格式
 function validateTaskData(tasks) {
   if (!Array.isArray(tasks)) {
-    console.error('tasks 必須是 array')
-    return false
+    console.error('tasks 必須是 array');
+    return false;
   }
 
   for (const task of tasks) {
     if (typeof task.id !== 'number') {
-      console.error('id 必須是 number')
-      return false
+      console.error('id 必須是 number');
+      return false;
     }
 
     if (typeof task.taskHeader !== 'string') {
-      console.error('taskHeader 必須是 string')
-      return false
+      console.error('taskHeader 必須是 string');
+      return false;
     }
 
     if (typeof task.taskUrl !== 'string') {
-      console.error('taskUrl 必須是 string')
-      return false
+      console.error('taskUrl 必須是 string');
+      return false;
     }
 
     if (typeof task.taskBranch !== 'string') {
-      console.error('taskBranch 必須是 string')
-      return false
+      console.error('taskBranch 必須是 string');
+      return false;
     }
 
     if (!Array.isArray(task.times)) {
-      console.error('times 必須是 array')
-      return false
+      console.error('times 必須是 array');
+      return false;
     }
 
     for (const time of task.times) {
       if (typeof time.date !== 'string') {
-        console.error('date 必須是 string')
-        return false
+        console.error('date 必須是 string');
+        return false;
       }
 
       if (!Array.isArray(time.periods)) {
-        console.error('periods 必須是 array')
-        return false
+        console.error('periods 必須是 array');
+        return false;
       }
 
       for (const period of time.periods) {
         if (!Array.isArray(period) || period.length !== 2 || typeof period[0] !== 'number' || typeof period[1] !== 'number') {
-          console.error('每個 period 必須是 [number, number]')
-          return false
+          console.error('每個 period 必須是 [number, number]');
+          return false;
         }
       }
     }
   }
 
-  return true
+  return true;
 }
 
 // 刪除
 function deleteTask(rowid) {
-  const taskIndex = _tasks.value.findIndex((t) => t.id === rowid)
+  const taskIndex = _tasks.value.findIndex((t) => t.id === rowid);
 
-  if (taskIndex === -1) return
+  if (taskIndex === -1) return;
 
   confirm.require({
     header: '確認刪除任務?',
@@ -760,43 +750,43 @@ function deleteTask(rowid) {
       severity: 'danger'
     },
     accept: () => {
-      _tasks.value.splice(taskIndex, 1)
+      _tasks.value.splice(taskIndex, 1);
 
       if (_data.value.id == rowid) {
-        let maxId = Math.max(..._tasks.value.map((item) => item.id))
+        let maxId = Math.max(..._tasks.value.map((item) => item.id));
         _data.value = {
           id: maxId + 1,
           taskHeader: '',
           taskUrl: '',
           taskBranch: '',
           times: []
-        }
+        };
 
-        saveCache()
+        saveCache();
       }
-      saveTasks()
+      saveTasks();
     },
     reject: () => {}
-  })
+  });
 }
 function deleteDate(rowdate) {
-  const taskIndex = _tasks.value.findIndex((t) => t.id === _data.value.id)
+  const taskIndex = _tasks.value.findIndex((t) => t.id === _data.value.id);
 
-  if (taskIndex === -1) return
+  if (taskIndex === -1) return;
 
   if (rowdate) {
-    const timesIndex = _tasks.value[taskIndex].times.findIndex((t) => t.date === rowdate)
+    const timesIndex = _tasks.value[taskIndex].times.findIndex((t) => t.date === rowdate);
     if (timesIndex !== -1) {
-      _tasks.value[taskIndex].times.splice(timesIndex, 1)
+      _tasks.value[taskIndex].times.splice(timesIndex, 1);
     }
 
-    const dataTimeIndex = _data.value.times.findIndex((t) => t.date === rowdate)
+    const dataTimeIndex = _data.value.times.findIndex((t) => t.date === rowdate);
     if (dataTimeIndex !== -1) {
-      _data.value.times.splice(dataTimeIndex, 1)
+      _data.value.times.splice(dataTimeIndex, 1);
     }
 
-    saveTasks()
-    saveCache()
+    saveTasks();
+    saveCache();
   }
 }
 </script>

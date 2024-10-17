@@ -16,15 +16,13 @@
         "
         :key="index"
         class="time-block"
-        :style="getPeriodStyle(period, '#35B303')"
-      ></div>
+        :style="getPeriodStyle(period, '#35B303')"></div>
       <div
         v-for="period in props.restTime"
         v-tooltip.bottom="`午休${Math.floor(period[0] / 60)}:${period[0] % 60}-${Math.floor(period[1] / 60)}:${period[1] % 60}`"
         :key="index"
         class="time-block"
-        :style="getPeriodStyle(period, '#757575')"
-      ></div>
+        :style="getPeriodStyle(period, '#757575')"></div>
     </div>
     <div v-if="props.showScale" class="timeline-scale">
       <div v-for="hour in getTimeMarks()" :key="hour" class="time-mark" :style="{ left: `${(hour / 24) * 100}%` }">{{ hour }}:00</div>
@@ -33,47 +31,47 @@
 </template>
 
 <script setup>
-import { computed, defineEmits } from 'vue'
+import { computed, defineEmits } from 'vue';
 
-import Button from 'primevue/button'
-import Tag from 'primevue/tag'
+import Button from 'primevue/button';
+import Tag from 'primevue/tag';
 
-const props = defineProps(['modelValue', 'date', 'workTime', 'restTime', 'showScale', 'showDateAndSum', 'deleteMode'])
-const emit = defineEmits(['deleteDate'])
+const props = defineProps(['modelValue', 'date', 'workTime', 'restTime', 'showScale', 'showDateAndSum', 'deleteMode']);
+const emit = defineEmits(['deleteDate']);
 
 const getPeriodStyle = (period, color) => {
-  const start = (period[0] / 1440) * 100
-  const duration = ((period[1] - period[0]) / 1440) * 100
+  const start = (period[0] / 1440) * 100;
+  const duration = ((period[1] - period[0]) / 1440) * 100;
 
   return {
     left: `${start}%`,
     width: `${duration}%`,
     backgroundColor: color
-  }
-}
+  };
+};
 
 const getTimeMarks = () => {
-  const marks = []
+  const marks = [];
   for (let i = 0; i <= 24; i += 2) {
-    marks.push(i)
+    marks.push(i);
   }
-  return marks
-}
+  return marks;
+};
 
 const calHour = computed(() => {
   const dayMinutes = props.workTime?.reduce((dayMinutes, period) => {
-    const [start, end] = period
-    return dayMinutes + (end - start)
-  }, 0)
+    const [start, end] = period;
+    return dayMinutes + (end - start);
+  }, 0);
 
   if (!dayMinutes) {
-    return '00:00'
+    return '00:00';
   }
 
   return `${Math.floor(dayMinutes / 60)
     .toString()
-    .padStart(2, '0')}:${(dayMinutes % 60).toString().padStart(2, '0')}`
-})
+    .padStart(2, '0')}:${(dayMinutes % 60).toString().padStart(2, '0')}`;
+});
 </script>
 
 <style scoped>
