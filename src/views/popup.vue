@@ -103,11 +103,11 @@
     <!-- Time Editor -->
     <Panel v-if="showBlock.timeEditor" class="pl-3 pr-3" :pt:root:style="taskBlockColor() + 'margin-top: -2px;'">
       <div class="grid">
-        <div class="col-3">
+        <div class="col-3 pb-0">
           <label>任務日期&nbsp;<Button class="h-1rem" outlined raised @click="_time.date = convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })" label="今日" size="small" /></label>
           <InputTextDate class="w-full" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>&nbsp;
         </div>
-        <div class="col-8">
+        <div class="col-6 pb-0">
           <label>
             時段&nbsp;
             <Button
@@ -134,14 +134,37 @@
             <InputNumber v-model="computedEndTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
           </div>
         </div>
-        <div class="col-1">
-          <label>加入</label>
+        <div class="col-2 pb-0">
+          <label v-if="showBlock.timeEditor == 1">新增模式</label>
+          <label v-if="showBlock.timeEditor == 2">扣除模式</label>
+          <br />
+          <ToggleSwitch v-model="showBlock.timeEditor" :falseValue="1" :trueValue="2" :pt:slider:style="showBlock.timeEditor == 2 ? 'background: #EF4444' : 'background: #27C662'"></ToggleSwitch>
+        </div>
+        <div class="col-1 pb-0">
+          <label v-if="showBlock.timeEditor == 1">加入</label>
+          <label v-if="showBlock.timeEditor == 2">扣除</label>
           <br />
           <Button icon="pi pi-save" :severity="!_data.taskHeader?.trim() ? 'secondary' : 'warn'" outlined raised @click="saveTime" :disabled="!_data.taskHeader?.trim()" />
         </div>
-        <Slider class="mt-1 col-12" v-model="_period" range :step="1" :max="1441" pt:startHandler:style="margin-top: 8px; z-index: 10;" pt:endHandler:style="margin-top: 8px; z-index: 10;" />
-        <br />
-        <Timeline class="col-12 p-0 mt-3" :workTime="selectedDateTimeline?.periods" :restTime="[[710, 800]]" :showScale="true"></Timeline>
+        <div class="col-12 p-0">
+          <Slider
+            class="col-12 z-5"
+            v-model="_period"
+            range
+            :step="1"
+            :max="1441"
+            pt:root:style="height: 20px"
+            pt:startHandler:style="margin-top: -15px; z-index: 10; border-radius:0; background:transparent; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent;  border-top: 12px solid gray;"
+            pt:endHandler:style="margin-top: 3px; z-index: 10; border-radius:0; background:transparent; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 12px solid gray;"
+            :pt:range:style="
+              showBlock.timeEditor == 2
+                ? 'background: repeating-linear-gradient(45deg,rgba(239, 68, 68, 0.5),rgba(239, 68, 68, 0.5) 10px,transparent 10px,transparent 15px);'
+                : 'background: rgba(16, 185, 129, 0.5);'
+            "
+            style="background: rgba(0, 0, 0, 0)" />
+          <br />
+          <Timeline class="col-12 p-0" :workTime="selectedDateTimeline?.periods" :restTime="[[710, 800]]" :showScale="true" style="margin-top: -39px"></Timeline>
+        </div>
       </div>
     </Panel>
     <!-- Tasks List and Data -->
@@ -216,6 +239,7 @@ import FileUpload from 'primevue/fileupload';
 import Panel from 'primevue/panel';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Tag from 'primevue/tag';
+import ToggleSwitch from 'primevue/toggleswitch';
 import { useConfirm } from 'primevue/useconfirm';
 
 import InputTextDate from '@/components/InputTextDate.vue';
