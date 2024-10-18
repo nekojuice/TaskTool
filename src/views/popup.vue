@@ -79,7 +79,7 @@
           <InputNumber id="taskId" v-model="_data.id" inputClass="w-full" :min="0" size="small" :disabled="true" />
         </div>
         <div class="col">
-          <label for="taskHeader">標題</label>
+          <label for="taskHeader">標題 <label v-if="checkUnsaved" style="color: gray">(未儲存)</label></label>
           <InputText id="taskHeader" class="w-full" type="text" v-model="_data.taskHeader" @change="saveCache()" />
         </div>
         <div class="col-1">
@@ -447,7 +447,7 @@ const timeBlockColor = () => {
 };
 
 const taskListSelect = (data) => {
-  _data.value = data;
+  _data.value = { ...data };
   newTaskRestoreTempID.value = data.id;
   if (showBlock.value.taskEditor == 2) {
     showBlock.value.taskEditor = 1;
@@ -960,6 +960,19 @@ const handleKeydown = (event) => {
     downloadOnClick();
   }
 };
+
+const checkUnsaved = computed(() => {
+  const taskIndex = _tasks.value.findIndex((t) => t.id == _data.value.id);
+  if (taskIndex == -1) {
+    return false;
+  }
+
+  if (_tasks.value[taskIndex].taskBranch != _data.value.taskBranch || _tasks.value[taskIndex].taskHeader != _data.value.taskHeader || _tasks.value[taskIndex].taskUrl != _data.value.taskUrl) {
+    return true;
+  } else {
+    return false;
+  }
+});
 </script>
 
 <style scoped>
