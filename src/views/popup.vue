@@ -491,6 +491,7 @@ const saveTime = () => {
   } else {
     const mergedPeriod = processWorkPeriods([..._tasks.value[taskIndex].times[timeIndex].periods, [..._period.value]]);
     _tasks.value[taskIndex].times[timeIndex].periods = mergedPeriod;
+    _data.value.times[timeIndex].periods = mergedPeriod;
   }
 
   saveTasks();
