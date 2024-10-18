@@ -910,14 +910,19 @@ function deleteTask(rowid) {
       _tasks.value.splice(taskIndex, 1);
 
       if (_data.value.id == rowid) {
-        let maxId = Math.max(..._tasks.value.map((item) => item.id));
         _data.value = {
-          id: maxId + 1,
           taskHeader: '',
           taskUrl: '',
           taskBranch: '',
           times: []
         };
+
+        if (_tasks.value.length) {
+          _data.value.id = Math.max(..._tasks.value.map((item) => item.id)) + 1;
+        } else {
+          _data.value.id = 0;
+          showBlock.value.taskEditor = 2
+        }
 
         saveCache();
       }
