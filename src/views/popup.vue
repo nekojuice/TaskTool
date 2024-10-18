@@ -962,6 +962,29 @@ const handleKeydown = (event) => {
   }
 };
 
+const handleDialogKeydown = (event) => {
+  if (event.key === 'Enter') {
+    handleSave()
+  } else if (event.key === 'Delete') {
+    handleDelete()
+  }
+}
+const handleSave = () => {
+  periodEditorData.value.showPeriodEditor = false
+  periodEditorSavePeriod()
+}
+const handleDelete = () => {
+  periodEditorData.value.showPeriodEditor = false
+  periodEditorDeletePeriod()
+}
+watch(() => periodEditorData.value.showPeriodEditor, (newVal) => {
+  if (newVal) {
+    window.addEventListener('keydown', handleDialogKeydown);
+  } else {
+    window.removeEventListener('keydown', handleDialogKeydown);
+  }
+});
+
 const checkUnsaved = computed(() => {
   const taskIndex = _tasks.value.findIndex((t) => t.id == _data.value.id);
   if (taskIndex == -1) {
