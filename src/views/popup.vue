@@ -104,8 +104,9 @@
     <Panel v-if="showBlock.timeEditor" class="pl-3 pr-3" :pt:root:style="timeBlockColor() + 'margin-top: -2px;'">
       <div class="grid">
         <div class="col-3 pb-0">
-          <label
-            >任務日期&nbsp;<Button
+          <label>
+            日期&nbsp;
+            <Button
               class="h-1rem"
               outlined
               raised
@@ -113,8 +114,8 @@
               label="選擇今日"
               size="small"
               :severity="_time.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }) ? 'secondary' : 'primary'"
-              :disabled="_time.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })"
-          /></label>
+              :disabled="_time.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })" />
+          </label>
           <InputTextDate class="w-full" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>&nbsp;
         </div>
         <div class="col-6 pb-0">
@@ -723,7 +724,7 @@ const selectedDateTimeline = computed(() => {
   return _data.value.times.filter((t) => t.date == _time.value.date)[0];
 });
 
-const sortedTimelines = computed(() => _data.value.times.sort((a, b) => (a.date > b.date ? 1 : b.date > a.date ? -1 : 0)));
+const sortedTimelines = computed(() => _data.value.times.sort((b, a) => (a.date > b.date ? 1 : b.date > a.date ? -1 : 0)));
 
 // 週月分群
 const getWeekDates = (date) => {
