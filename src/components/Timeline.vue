@@ -6,7 +6,7 @@
     </span>
     <div class="timeline">
       <div
-        v-for="period in props.workTime"
+        v-for="(period, index) in props.workTime"
         v-tooltip.bottom="
           `${Math.floor(period[0] / 60)
             .toString()
@@ -16,7 +16,8 @@
         "
         :key="index"
         class="time-block"
-        :style="getPeriodStyle(period, '#35B303')" @dblclick="console.log('123');"></div>
+        :style="getPeriodStyle(period, '#35B303')"
+        @dblclick="editTimePeriod($event, index)"></div>
       <div
         v-for="period in props.restTime"
         v-tooltip.bottom="`午休${Math.floor(period[0] / 60)}:${period[0] % 60}-${Math.floor(period[1] / 60)}:${period[1] % 60}`"
@@ -37,7 +38,7 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 
 const props = defineProps(['modelValue', 'date', 'workTime', 'restTime', 'showScale', 'showDateAndSum', 'deleteMode']);
-const emit = defineEmits(['deleteDate']);
+const emit = defineEmits(['deleteDate', 'periodEditorData']);
 
 const getPeriodStyle = (period, color) => {
   const start = (period[0] / 1440) * 100;
@@ -72,6 +73,10 @@ const calHour = computed(() => {
     .toString()
     .padStart(2, '0')}:${(dayMinutes % 60).toString().padStart(2, '0')}`;
 });
+
+const editTimePeriod = (event, periodIndex) => {
+  emit('periodEditorData', { showPeriodEditor: true, date: props.date, periodIndex: periodIndex });
+};
 </script>
 
 <style scoped>

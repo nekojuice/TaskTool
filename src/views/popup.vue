@@ -152,18 +152,25 @@
             v-model="_period"
             range
             :step="1"
-            :max="1441"
+            :max="1440"
             pt:startHandler:style="margin-left: -10px; margin-top: -20px; z-index: 10; border-radius: 0; background: transparent; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 10px solid gray;"
             pt:endHandler:style="margin-left: 0px; margin-top: -20px; z-index: 10; z-index: 10; border-radius: 0; background: transparent; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid gray;"
             pt:range:style="height: 10px; margin-top: 10px; background: repeating-linear-gradient(45deg, rgba(249, 115, 22, 1),  rgba(249, 115, 22, 0.5) 4px, transparent 4px, transparent 7px);"
             style="background: rgba(0, 0, 0, 0)" />
           <br />
-          <Timeline class="col-12 p-0" :workTime="selectedDateTimeline?.periods" :restTime="[[710, 800]]" :showScale="true" style="margin-top: -30px"></Timeline>
+          <Timeline
+            class="col-12 p-0"
+            :date="_time.date"
+            :workTime="selectedDateTimeline?.periods"
+            :restTime="[[710, 800]]"
+            :showScale="true"
+            style="margin-top: -30px"
+            @periodEditorData="(data) => periodEditorLoadPeriod(data)" />
         </div>
       </div>
     </Panel>
     <!-- Tasks List and Data -->
-    <ConfirmDialog></ConfirmDialog>
+    <ConfirmDialog group="deleteTask"></ConfirmDialog>
     <div class="target">
       <div class="grid">
         <div class="col">
@@ -212,13 +219,28 @@
                   :showDateAndSum="true"
                   :deleteMode="showBlock.deleteMode"
                   @click="_time.date = day.date"
-                  @deleteDate="deleteDate(day.date)"></Timeline>
+                  @deleteDate="deleteDate(day.date)"
+                  @periodEditorData="(data) => periodEditorLoadPeriod(data)" />
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <Dialog v-model:visible="periodEditorData.showPeriodEditor" modal header="更改時間軸片段" :style="{ width: '25rem' }">
+      <div>日期: {{ periodEditorData.date }} <Tag class="h-1rem" severity="info" :value="new Intl.DateTimeFormat('zh-TW', { weekday: 'short' }).format(new Date(periodEditorData.date))"></Tag></div>
+      <div class="w-full">
+        <InputNumber v-model="periodEditorComputedStartTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
+        <InputNumber v-model="periodEditorComputedStartTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
+        &nbsp;~&nbsp;
+        <InputNumber v-model="periodEditorComputedEndTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
+        <InputNumber v-model="periodEditorComputedEndTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
+      </div>
+      <div class="flex justify-end gap-2">
+        <Button type="button" label="取消" severity="secondary" @click="periodEditorData.showPeriodEditor = false"></Button>
+        <Button type="button" label="修改" @click="[(periodEditorData.showPeriodEditor = false), periodEditorSavePeriod()]"></Button>
+      </div>
+    </Dialog>
   </div>
 </template>
 <script setup>
@@ -234,7 +256,7 @@ import FileUpload from 'primevue/fileupload';
 import Panel from 'primevue/panel';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Tag from 'primevue/tag';
-import ToggleSwitch from 'primevue/toggleswitch';
+import Dialog from 'primevue/dialog';
 import { useConfirm } from 'primevue/useconfirm';
 
 import InputTextDate from '@/components/InputTextDate.vue';
@@ -269,6 +291,12 @@ const showBlock = ref({
   timeEditor: false,
   debugBlock: false,
   deleteMode: false
+});
+const periodEditorData = ref({
+  showPeriodEditor: false,
+  date: '',
+  periodIndex: '',
+  period: [0, 0]
 });
 
 const showStorageData = () => {
@@ -533,73 +561,140 @@ const calEffort = (workData) => {
   return personDays;
 };
 
+// 時間軸新增器
 const computedStartTimeHour = computed({
   get() {
-    const tick = _period.value[0];
-
-    return Math.floor(tick / 60);
+    return hourGetter(_period.value, 0);
   },
   set(value) {
-    const tick = _period.value[0];
-    const minuteValue = tick % 60;
-
-    _period.value[0] = +value * 60 + minuteValue;
+    hourSetter(_period.value, 0, value);
+    periodSwitcher(_period.value);
+    periodLimiter(_period.value);
   }
 });
 const computedStartTimeMinute = computed({
   get() {
-    const tick = _period.value[0];
-
-    return tick % 60;
+    return minuteGetter(_period.value, 0);
   },
   set(value) {
-    const tick = _period.value[0];
-    const hourValue = Math.floor(tick / 60);
-
-    _period.value[0] = hourValue * 60 + +value;
+    minuteSetter(_period.value, 0, value);
+    periodSwitcher(_period.value);
+    periodLimiter(_period.value);
   }
 });
 const computedEndTimeHour = computed({
   get() {
-    const tick = _period.value[1];
-
-    return Math.floor(tick / 60);
+    return hourGetter(_period.value, 1);
   },
   set(value) {
-    const tick = _period.value[1];
-    const minuteValue = tick % 60;
-
-    _period.value[1] = +value * 60 + minuteValue;
+    hourSetter(_period.value, 1, value);
+    periodSwitcher(_period.value);
+    periodLimiter(_period.value);
   }
 });
 const computedEndTimeMinute = computed({
   get() {
-    const tick = _period.value[1];
-
-    return tick % 60;
+    return minuteGetter(_period.value, 1);
   },
   set(value) {
-    const tick = _period.value[1];
-    const hourValue = Math.floor(tick / 60);
-
-    _period.value[1] = hourValue * 60 + +value;
+    minuteSetter(_period.value, 1, value);
+    periodSwitcher(_period.value);
+    periodLimiter(_period.value);
   }
 });
+
 watch(
   () => _period.value,
   (period) => {
-    period[0] = period[0] < 0 ? 0 : period[0];
-    period[1] = period[1] > 1440 ? 1440 : period[1];
-
-    if (period[0] > 1425) {
-      period[0] = 1425;
-      period[1] = 1440;
-    }
-    if (period[0] >= period[1] && period[0] <= 1425) {
-      period[1] = period[0] + 15;
-    }
+    periodSwitcher(period);
   }
 );
+
+// 時間片段編輯器
+const periodEditorComputedStartTimeHour = computed({
+  get() {
+    return hourGetter(periodEditorData.value.period, 0);
+  },
+  set(value) {
+    hourSetter(periodEditorData.value.period, 0, value);
+    periodSwitcher(periodEditorData.value.period);
+    periodLimiter(periodEditorData.value.period);
+  }
+});
+const periodEditorComputedStartTimeMinute = computed({
+  get() {
+    return minuteGetter(periodEditorData.value.period, 0);
+  },
+  set(value) {
+    minuteSetter(periodEditorData.value.period, 0, value);
+    periodSwitcher(periodEditorData.value.period);
+    periodLimiter(periodEditorData.value.period);
+  }
+});
+const periodEditorComputedEndTimeHour = computed({
+  get() {
+    return hourGetter(periodEditorData.value.period, 1);
+  },
+  set(value) {
+    hourSetter(periodEditorData.value.period, 1, value);
+    periodSwitcher(periodEditorData.value.period);
+    periodLimiter(periodEditorData.value.period);
+  }
+});
+const periodEditorComputedEndTimeMinute = computed({
+  get() {
+    return minuteGetter(periodEditorData.value.period, 1);
+  },
+  set(value) {
+    minuteSetter(periodEditorData.value.period, 1, value);
+    periodSwitcher(periodEditorData.value.period);
+    periodLimiter(periodEditorData.value.period);
+  }
+});
+
+const periodEditorLoadPeriod = (emitData) => {
+  periodEditorData.value.showPeriodEditor = emitData.showPeriodEditor;
+  periodEditorData.value.date = emitData.date;
+  periodEditorData.value.periodIndex = emitData.periodIndex;
+
+  periodEditorData.value.period = [..._data.value.times.filter((t) => t.date == periodEditorData.value.date)[0].periods[periodEditorData.value.periodIndex]];
+};
+const periodEditorSavePeriod = () => {
+  _data.value.times.filter((t) => t.date == periodEditorData.value.date)[0].periods[periodEditorData.value.periodIndex] = periodEditorData.value.period;
+  _data.value.times.filter((t) => t.date == periodEditorData.value.date)[0].periods = processWorkPeriods(_data.value.times.filter((t) => t.date == periodEditorData.value.date)[0].periods);
+
+  const taskIndex = _tasks.value.findIndex((t) => t.id === _data.value.id);
+  _tasks.value[taskIndex] = { ..._data.value };
+
+  saveTasks();
+  saveCache();
+};
+
+const hourGetter = (periodArray, index) => {
+  return Math.floor(periodArray[index] / 60);
+};
+const hourSetter = (periodArray, index, value) => {
+  periodArray[index] = +value * 60 + (periodArray[index] % 60);
+};
+const minuteGetter = (periodArray, index) => {
+  return periodArray[index] % 60;
+};
+const minuteSetter = (periodArray, index, value) => {
+  periodArray[index] = Math.floor(periodArray[index] / 60) * 60 + +value;
+};
+const periodSwitcher = (periodArray) => {
+  if (periodArray[1] < periodArray[0]) {
+    [periodArray[0], periodArray[1]] = [periodArray[1], periodArray[0]];
+  }
+};
+const periodLimiter = (periodArray) => {
+  if (periodArray[0] < 0) {
+    periodArray[0] = 0;
+  }
+  if (periodArray[1] > 1440) {
+    periodArray[1] = 1440;
+  }
+};
 
 const selectedDateTimeline = computed(() => {
   return _data.value.times.filter((t) => t.date == _time.value.date)[0];
@@ -776,6 +871,7 @@ function deleteTask(rowid) {
   if (taskIndex === -1) return;
 
   confirm.require({
+    group: 'deleteTask',
     header: '確認刪除任務?',
     message: `#${rowid}: ${_tasks.value[taskIndex].taskHeader}`,
     icon: 'pi pi-info-circle',
@@ -831,7 +927,7 @@ function deleteDate(rowdate) {
 
 const handleKeydown = (event) => {
   if (event.ctrlKey && event.key === 's') {
-    event.preventDefault(); // 阻止瀏覽器預設的 Ctrl+S 行為 (存檔)
+    event.preventDefault();
     downloadOnClick();
   }
 };
