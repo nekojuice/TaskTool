@@ -232,7 +232,7 @@
                   @click="[(_time.date = day.date), (showBlock.timeEditor = 1)]"
                   @deleteDate="deleteDate(day.date)"
                   @periodEditorData="(data) => periodEditorLoadPeriod(data)"
-                  class="floatEffect cursorPointer" />
+                  :class="(day.date == _time.date ? 'orangeBackground' : '') + ' floatEffect cursorPointer'" />
               </div>
             </div>
           </div>
@@ -1004,5 +1004,9 @@ const handleKeydown = (event) => {
 .floatEffect:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+.orangeBackground {
+  background-color: #f99c165c;
 }
 </style>
