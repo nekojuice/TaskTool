@@ -15,7 +15,7 @@
             .padStart(2, '0')}:${(period[1] % 60).toString().padStart(2, '0')} (${Math.floor((period[1] - period[0]) / 60)}h ${(period[1] - period[0]) % 60}min)`
         "
         :key="index"
-        class="time-block"
+        class="time-block cursorPointer"
         :style="getPeriodStyle(period, '#35B303')"
         @dblclick="editTimePeriod($event, index)"></div>
       <div
@@ -106,5 +106,9 @@ const editTimePeriod = (event, periodIndex) => {
   font-size: 12px;
   color: #333;
   transform: translateX(-50%);
+}
+
+.cursorPointer {
+  cursor: pointer;
 }
 </style>

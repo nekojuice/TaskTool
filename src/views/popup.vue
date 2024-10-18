@@ -104,7 +104,17 @@
     <Panel v-if="showBlock.timeEditor" class="pl-3 pr-3" :pt:root:style="timeBlockColor() + 'margin-top: -2px;'">
       <div class="grid">
         <div class="col-3 pb-0">
-          <label>任務日期&nbsp;<Button class="h-1rem" outlined raised @click="_time.date = convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })" label="今日" size="small" /></label>
+          <label
+            >任務日期&nbsp;<Button
+              class="h-1rem"
+              outlined
+              raised
+              @click="_time.date = convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })"
+              label="今日"
+              size="small"
+              :severity="_time.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }) ? 'secondary' : 'primary'"
+              :disabled="_time.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })"
+          /></label>
           <InputTextDate class="w-full" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>&nbsp;
         </div>
         <div class="col-6 pb-0">
@@ -236,9 +246,11 @@
         <InputNumber v-model="periodEditorComputedEndTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
         <InputNumber v-model="periodEditorComputedEndTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
       </div>
-      <div class="flex justify-end gap-2">
-        <Button type="button" label="取消" severity="secondary" @click="periodEditorData.showPeriodEditor = false"></Button>
-        <Button type="button" label="修改" @click="[(periodEditorData.showPeriodEditor = false), periodEditorSavePeriod()]"></Button>
+      <div class="grid mt-4">
+        <Button class="col-2" type="button" label="刪除" severity="danger" @click="[(periodEditorData.showPeriodEditor = false), periodEditorDeletePeriod()]"></Button>
+        <span class="col-6"></span>
+        <Button class="col-2" type="button" label="取消" severity="secondary" @click="periodEditorData.showPeriodEditor = false"></Button>
+        <Button class="col-2" type="button" label="修改" @click="[(periodEditorData.showPeriodEditor = false), periodEditorSavePeriod()]"></Button>
       </div>
     </Dialog>
   </div>
@@ -561,7 +573,7 @@ const calEffort = (workData) => {
   return personDays;
 };
 
-// 時間軸新增器
+// 時間軸編輯器
 const computedStartTimeHour = computed({
   get() {
     return hourGetter(_period.value, 0);
@@ -610,7 +622,7 @@ watch(
   }
 );
 
-// 時間片段編輯器
+// 時間軸片段修改視窗
 const periodEditorComputedStartTimeHour = computed({
   get() {
     return hourGetter(periodEditorData.value.period, 0);
@@ -662,6 +674,16 @@ const periodEditorLoadPeriod = (emitData) => {
 const periodEditorSavePeriod = () => {
   _data.value.times.filter((t) => t.date == periodEditorData.value.date)[0].periods[periodEditorData.value.periodIndex] = periodEditorData.value.period;
   _data.value.times.filter((t) => t.date == periodEditorData.value.date)[0].periods = processWorkPeriods(_data.value.times.filter((t) => t.date == periodEditorData.value.date)[0].periods);
+
+  const taskIndex = _tasks.value.findIndex((t) => t.id === _data.value.id);
+  _tasks.value[taskIndex] = { ..._data.value };
+
+  saveTasks();
+  saveCache();
+};
+const periodEditorDeletePeriod = () => {
+  const timeIndex = _data.value.times.findIndex((t) => t.date == periodEditorData.value.date);
+  _data.value.times[timeIndex].periods.splice(periodEditorData.value.periodIndex, 1);
 
   const taskIndex = _tasks.value.findIndex((t) => t.id === _data.value.id);
   _tasks.value[taskIndex] = { ..._data.value };
