@@ -110,7 +110,7 @@
               outlined
               raised
               @click="_time.date = convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })"
-              label="今日"
+              label="選擇今日"
               size="small"
               :severity="_time.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }) ? 'secondary' : 'primary'"
               :disabled="_time.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })"
@@ -228,9 +228,10 @@
                   :restTime="[[710, 800]]"
                   :showDateAndSum="true"
                   :deleteMode="showBlock.deleteMode"
-                  @click="_time.date = day.date"
+                  @click="[(_time.date = day.date), (showBlock.timeEditor = 1)]"
                   @deleteDate="deleteDate(day.date)"
-                  @periodEditorData="(data) => periodEditorLoadPeriod(data)" />
+                  @periodEditorData="(data) => periodEditorLoadPeriod(data)"
+                  class="floatEffect cursorPointer" />
               </div>
             </div>
           </div>
@@ -921,7 +922,7 @@ function deleteTask(rowid) {
           _data.value.id = Math.max(..._tasks.value.map((item) => item.id)) + 1;
         } else {
           _data.value.id = 0;
-          showBlock.value.taskEditor = 2
+          showBlock.value.taskEditor = 2;
         }
 
         saveCache();
@@ -982,5 +983,25 @@ const handleKeydown = (event) => {
   overflow-y: auto;
   overflow-x: hidden;
   background-color: #f0f0f0;
+}
+
+.cursorPointer {
+  cursor: pointer;
+}
+
+.floatEffect {
+  padding: 2px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.floatEffect:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
 }
 </style>
