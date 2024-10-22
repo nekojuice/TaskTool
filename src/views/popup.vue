@@ -9,12 +9,19 @@
         :outlined="!showBlock.debugBlock"
         @click="showBlock.debugBlock = !showBlock.debugBlock" />
       <Button
-        v-tooltip="'在新瀏覽器標籤開啟小工具'"
+        v-tooltip="'在瀏覽器新分頁開啟'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-tag"
+        severity="secondary"
+        outlined
+        @click="openInNewTab('/index.html')" />
+      <Button
+        v-tooltip="'在瀏覽器新視窗開啟'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-window-maximize"
         severity="secondary"
         outlined
-        @click="openInNewTab('/index.html')" />
+        @click="openInNewWindow('/index.html')" />
       <div class="h-2rem w-2rem"></div>
       <Button
         v-tooltip="'任務內容編輯器'"
@@ -380,6 +387,12 @@ const deleteAllData = async () => {
 };
 const openInNewTab = (url) => {
   window.open(url, '_blank');
+};
+const openInNewWindow = (url) => {
+  chrome.windows.create({
+    url: url,
+    type: 'popup'
+  });
 };
 
 const newTaskRestoreTempID = ref(-1);
@@ -964,26 +977,29 @@ const handleKeydown = (event) => {
 
 const handleDialogKeydown = (event) => {
   if (event.key === 'Enter') {
-    handleSave()
+    handleSave();
   } else if (event.key === 'Delete') {
-    handleDelete()
+    handleDelete();
   }
-}
+};
 const handleSave = () => {
-  periodEditorData.value.showPeriodEditor = false
-  periodEditorSavePeriod()
-}
+  periodEditorData.value.showPeriodEditor = false;
+  periodEditorSavePeriod();
+};
 const handleDelete = () => {
-  periodEditorData.value.showPeriodEditor = false
-  periodEditorDeletePeriod()
-}
-watch(() => periodEditorData.value.showPeriodEditor, (newVal) => {
-  if (newVal) {
-    window.addEventListener('keydown', handleDialogKeydown);
-  } else {
-    window.removeEventListener('keydown', handleDialogKeydown);
+  periodEditorData.value.showPeriodEditor = false;
+  periodEditorDeletePeriod();
+};
+watch(
+  () => periodEditorData.value.showPeriodEditor,
+  (newVal) => {
+    if (newVal) {
+      window.addEventListener('keydown', handleDialogKeydown);
+    } else {
+      window.removeEventListener('keydown', handleDialogKeydown);
+    }
   }
-});
+);
 
 const checkUnsaved = computed(() => {
   const taskIndex = _tasks.value.findIndex((t) => t.id == _data.value.id);
