@@ -189,7 +189,7 @@
     </Panel>
     <!-- Tasks List and Data -->
     <ConfirmDialog group="deleteTask"></ConfirmDialog>
-    <div class="target">
+    <div class="scrollTarget">
       <div class="grid">
         <div class="col">
           <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
@@ -1031,7 +1031,7 @@ const checkUnsaved = computed(() => {
   height: 100%;
 }
 
-.target {
+.scrollTarget {
   padding: 10px;
   flex-grow: 1;
   overflow-y: auto;
