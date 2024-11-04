@@ -14,14 +14,22 @@
         icon="pi pi-tag"
         severity="secondary"
         outlined
-        @click="openInNewTab('/index.html')" />
+        @click="
+          _optionsData.hasExecutedOpenMode = true;
+          saveOptions();
+          openInNewTab('/index.html');
+        " />
       <Button
         v-tooltip="'在瀏覽器新視窗開啟'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-window-maximize"
         severity="secondary"
         outlined
-        @click="openInNewWindow('/index.html')" />
+        @click="
+          _optionsData.hasExecutedOpenMode = true;
+          saveOptions();
+          openInNewWindow('/index.html');
+        " />
       <div class="h-1rem w-2rem"></div>
       <Button
         v-tooltip="'任務內容編輯器'"
@@ -296,7 +304,16 @@
             name="defaultOpenMode"
             value="newWindow"
             @change="[saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
-          <label for="defaultOpenMode.newWindow">新視窗</label>
+          <label for="defaultOpenMode.newWindow">新視窗(800×600)</label>
+        </div>
+        <div class="flex items-center gap-2">
+          <RadioButton
+            v-model="_optionsData.defaultOpenMode"
+            inputId="defaultOpenMode.newWindow_maximized"
+            name="defaultOpenMode"
+            value="newWindow_maximized"
+            @change="[saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
+          <label for="defaultOpenMode.newWindow_maximized">新視窗(視窗最大化)</label>
         </div>
       </div>
     </Dialog>
@@ -431,11 +448,20 @@ const deleteAllData = async () => {
 const openInNewTab = (url) => {
   window.open(url, '_blank');
 };
-const openInNewWindow = (url) => {
-  chrome.windows.create({
+const openInNewWindow = (url, width = 800, height = 600, maximized = false) => {
+  const windowOptions = {
     url: url,
     type: 'popup'
-  });
+  };
+
+  if (maximized) {
+    windowOptions.state = 'maximized';
+  } else {
+    windowOptions.width = width;
+    windowOptions.height = height;
+  }
+
+  chrome.windows.create(windowOptions);
 };
 
 const saveOptions = () => {
@@ -464,9 +490,15 @@ const executeDefaultOpenMode = () => {
   }
   if (_optionsData.value.defaultOpenMode === 'newTab') {
     openInNewTab('/index.html');
+    window.close();
   }
   if (_optionsData.value.defaultOpenMode === 'newWindow') {
     openInNewWindow('/index.html');
+    window.close();
+  }
+  if (_optionsData.value.defaultOpenMode === 'newWindow_maximized') {
+    openInNewWindow('/index.html', undefined, undefined, true);
+    window.close();
   }
 
   _optionsData.value.hasExecutedOpenMode = true;
