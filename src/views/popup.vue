@@ -488,23 +488,20 @@ const saveTaskInfo = () => {
 };
 
 const saveTime = () => {
-  const taskIndex = _tasks.value.findIndex((t) => t.id == _data.value.id);
-  const timeIndex = _tasks.value[taskIndex]?.times.findIndex((t) => t.date == _time.value.date) ?? -1;
+  const taskIndex = _tasks.value.findIndex((t) => t.id === _data.value.id);
+  const timeIndex = _data.value.times.findIndex((t) => t.date === _time.value.date);
 
-  if (timeIndex == -1) {
-    _time.value.periods = removeLaunchPeriod([..._period.value]);
-
-    _data.value.times.push({ ..._time.value });
-
-    if (taskIndex == -1) {
-      _tasks.value.push({ ..._data.value });
-    } else {
-      _tasks.value[taskIndex].times = _data.value.times;
-    }
+  const updatedPeriod = removeLaunchPeriod([..._period.value]);
+  if (timeIndex === -1) {
+    _data.value.times.push({ ..._time.value, periods: updatedPeriod });
   } else {
-    const mergedPeriod = processWorkPeriods([..._tasks.value[taskIndex].times[timeIndex].periods, [..._period.value]]);
-    _tasks.value[taskIndex].times[timeIndex].periods = mergedPeriod;
-    _data.value.times[timeIndex].periods = mergedPeriod;
+    _data.value.times[timeIndex].periods = processWorkPeriods([..._data.value.times[timeIndex].periods, ...updatedPeriod]);
+  }
+
+  if (taskIndex === -1) {
+    _tasks.value.push({ ..._data.value });
+  } else {
+    _tasks.value[taskIndex] = { ..._data.value };
   }
 
   saveTasks();
