@@ -267,17 +267,35 @@
     </Dialog>
     <!-- options -->
     <Dialog v-model:visible="showOptions" header="選項" :style="{ width: '25rem' }" :modal="true" :draggable="false">
+      <h3>
+        開啟方式 <span class="text-sm" style="color: red">{{ defaultOpenModeMessage }}</span>
+      </h3>
       <div class="flex flex-wrap gap-4">
         <div class="flex items-center gap-2">
-          <RadioButton v-model="_optionsData.defaultOpenMode" inputId="defaultOpenMode.popup" name="defaultOpenMode" value="popup" @change="saveOptions()" />
+          <RadioButton
+            v-model="_optionsData.defaultOpenMode"
+            inputId="defaultOpenMode.popup"
+            name="defaultOpenMode"
+            value="popup"
+            @change="[saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
           <label for="defaultOpenMode.popup">懸浮小窗</label>
         </div>
         <div class="flex items-center gap-2">
-          <RadioButton v-model="_optionsData.defaultOpenMode" inputId="defaultOpenMode.newTab" name="defaultOpenMode" value="newTab" @change="saveOptions()" />
+          <RadioButton
+            v-model="_optionsData.defaultOpenMode"
+            inputId="defaultOpenMode.newTab"
+            name="defaultOpenMode"
+            value="newTab"
+            @change="[saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
           <label for="defaultOpenMode.newTab">新分頁</label>
         </div>
         <div class="flex items-center gap-2">
-          <RadioButton v-model="_optionsData.defaultOpenMode" inputId="defaultOpenMode.newWindow" name="defaultOpenMode" value="newWindow" @change="saveOptions()" />
+          <RadioButton
+            v-model="_optionsData.defaultOpenMode"
+            inputId="defaultOpenMode.newWindow"
+            name="defaultOpenMode"
+            value="newWindow"
+            @change="[saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
           <label for="defaultOpenMode.newWindow">新視窗</label>
         </div>
       </div>
@@ -336,6 +354,7 @@ const showBlock = ref({
   deleteMode: false
 });
 const _optionsData = ref({ defaultOpenMode: 'popup' });
+const defaultOpenModeMessage = ref('');
 const showOptions = ref(false);
 const periodEditorData = ref({
   showPeriodEditor: false,
