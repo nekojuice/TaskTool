@@ -754,16 +754,34 @@ const getWeekDates = (date) => {
 };
 const getMonthWeek = (date, month) => {
   const d = new Date(date);
-  const firstDayOfMonth = new Date(d.getFullYear(), month, 1);
-  const firstDayOfWeek = new Date(firstDayOfMonth);
-  firstDayOfWeek.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay() + 1);
+  const targetYear = d.getFullYear();
 
-  if (firstDayOfWeek > d) {
-    firstDayOfWeek.setDate(firstDayOfWeek.getDate() - 7);
+  const firstDayOfMonth = new Date(targetYear, month, 1);
+  const firstDayWeekDay = firstDayOfMonth.getDay();
+
+  if (d.getDate() <= 7) {
+    const firstWeekMonday = new Date(firstDayOfMonth);
+    firstWeekMonday.setDate(firstDayOfMonth.getDate() - firstDayWeekDay + (firstDayWeekDay === 0 ? -6 : 1));
+
+    if (d.getMonth() === month && firstWeekMonday.getMonth() !== month) {
+      return 1;
+    }
   }
 
-  const daysDifference = Math.floor((d - firstDayOfWeek) / (24 * 60 * 60 * 1000));
-  return Math.floor(daysDifference / 7) + 1;
+  let firstWeekMonday = new Date(firstDayOfMonth);
+  if (firstDayWeekDay !== 1) {
+    const daysToAdd = firstDayWeekDay === 0 ? 1 : 8 - firstDayWeekDay;
+    firstWeekMonday.setDate(firstDayOfMonth.getDate() + daysToAdd - 7);
+  }
+
+  const currentMonday = new Date(d);
+  currentMonday.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1));
+
+  const diffTime = currentMonday.getTime() - firstWeekMonday.getTime();
+  const diffDays = Math.floor(diffTime / (24 * 60 * 60 * 1000));
+  const weekNum = Math.floor(diffDays / 7) + 1;
+
+  return weekNum;
 };
 const determineWeekMonth = (dates) => {
   const counts = dates.reduce((acc, date) => {
