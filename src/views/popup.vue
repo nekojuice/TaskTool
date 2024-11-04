@@ -504,6 +504,10 @@ const saveTime = () => {
     _tasks.value[taskIndex] = { ..._data.value };
   }
 
+  if (showBlock.value.taskEditor == 2) {
+    showBlock.value.taskEditor = 1;
+  }
+
   saveTasks();
   saveCache();
 };
