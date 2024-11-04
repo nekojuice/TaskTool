@@ -22,7 +22,7 @@
         severity="secondary"
         outlined
         @click="openInNewWindow('/index.html')" />
-      <div class="h-2rem w-2rem"></div>
+      <div class="h-1rem w-2rem"></div>
       <Button
         v-tooltip="'任務內容編輯器'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
@@ -51,7 +51,7 @@
         severity="danger"
         :outlined="!showBlock.deleteMode"
         @click="[(showBlock.deleteMode = !showBlock.deleteMode), saveCache()]" />
-      <div class="h-2rem w-2rem"></div>
+      <div class="h-1rem w-2rem"></div>
       <FileUpload
         v-tooltip="'上傳並覆蓋資料'"
         name="demo[]"
@@ -66,6 +66,8 @@
       </FileUpload>
       <Button v-tooltip="'下載資料(ctrl + s)'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
       <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
+      <div class="h-1rem w-2rem"></div>
+      <Button v-tooltip="'選項'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-cog" severity="secondary" outlined @click="showOptions = !showOptions" />
     </div>
     <!-- debugblock -->
     <div v-if="showBlock.debugBlock" class="w-2rem flex justify-content-center align-content-end flex-wrap">
@@ -246,6 +248,7 @@
         </div>
       </div>
     </div>
+    <!-- period editor -->
     <Dialog v-model:visible="periodEditorData.showPeriodEditor" modal header="更改時間軸片段" :style="{ width: '25rem' }">
       <div>日期: {{ periodEditorData.date }} <Tag class="h-1rem" severity="info" :value="new Intl.DateTimeFormat('zh-TW', { weekday: 'short' }).format(new Date(periodEditorData.date))"></Tag></div>
       <div class="w-full">
@@ -260,6 +263,23 @@
         <span class="col-6"></span>
         <Button class="col-2" type="button" label="取消" severity="secondary" @click="periodEditorData.showPeriodEditor = false"></Button>
         <Button class="col-2" type="button" label="修改" @click="[(periodEditorData.showPeriodEditor = false), periodEditorSavePeriod()]"></Button>
+      </div>
+    </Dialog>
+    <!-- options -->
+    <Dialog v-model:visible="showOptions" header="選項" :style="{ width: '25rem' }" :modal="true" :draggable="false">
+      <div class="flex flex-wrap gap-4">
+        <div class="flex items-center gap-2">
+          <RadioButton v-model="_optionsData.defaultOpenMode" inputId="defaultOpenMode.popup" name="defaultOpenMode" value="popup" @change="saveOptions()" />
+          <label for="defaultOpenMode.popup">懸浮小窗</label>
+        </div>
+        <div class="flex items-center gap-2">
+          <RadioButton v-model="_optionsData.defaultOpenMode" inputId="defaultOpenMode.newTab" name="defaultOpenMode" value="newTab" @change="saveOptions()" />
+          <label for="defaultOpenMode.newTab">新分頁</label>
+        </div>
+        <div class="flex items-center gap-2">
+          <RadioButton v-model="_optionsData.defaultOpenMode" inputId="defaultOpenMode.newWindow" name="defaultOpenMode" value="newWindow" @change="saveOptions()" />
+          <label for="defaultOpenMode.newWindow">新視窗</label>
+        </div>
       </div>
     </Dialog>
   </div>
@@ -278,6 +298,7 @@ import Panel from 'primevue/panel';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
+import RadioButton from 'primevue/radiobutton';
 import { useConfirm } from 'primevue/useconfirm';
 
 import InputTextDate from '@/components/InputTextDate.vue';
@@ -288,6 +309,7 @@ import { convertDateToString } from '../service/commonService';
 onMounted(() => {
   loadCache();
   loadTasks();
+  loadOptions();
   window.addEventListener('keydown', handleKeydown);
 });
 
@@ -313,6 +335,8 @@ const showBlock = ref({
   debugBlock: false,
   deleteMode: false
 });
+const _optionsData = ref({ defaultOpenMode: 'popup' });
+const showOptions = ref(false);
 const periodEditorData = ref({
   showPeriodEditor: false,
   date: '',
@@ -393,6 +417,41 @@ const openInNewWindow = (url) => {
     url: url,
     type: 'popup'
   });
+};
+
+const saveOptions = () => {
+  chrome.runtime.sendMessage({ action: 'setStorage', obj: { optionsData: _optionsData.value } }, (response) => {
+    console.log(response.message);
+  });
+};
+const loadOptions = async () => {
+  chrome.runtime.sendMessage({ action: 'getStorage', key: 'optionsData' }, (response) => {
+    if (response.message) {
+      _optionsData.value = response.message;
+    }
+
+    executeDefaultOpenMode();
+  });
+};
+const executeDefaultOpenMode = () => {
+  if (_optionsData.value.hasExecutedOpenMode) {
+    _optionsData.value.hasExecutedOpenMode = false;
+    saveOptions();
+    return;
+  }
+
+  if (_optionsData.value.defaultOpenMode === 'popup') {
+    return;
+  }
+  if (_optionsData.value.defaultOpenMode === 'newTab') {
+    openInNewTab('/index.html');
+  }
+  if (_optionsData.value.defaultOpenMode === 'newWindow') {
+    openInNewWindow('/index.html');
+  }
+
+  _optionsData.value.hasExecutedOpenMode = true;
+  saveOptions();
 };
 
 const newTaskRestoreTempID = ref(-1);
