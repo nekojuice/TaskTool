@@ -950,6 +950,9 @@ function deleteTask(rowid) {
 
         if (_tasks.value.length) {
           _data.value.id = Math.max(..._tasks.value.map((item) => item.id)) + 1;
+          if (showBlock.value.taskEditor == 1) {
+            showBlock.value.taskEditor = 2;
+          }
         } else {
           _data.value.id = 0;
           showBlock.value.taskEditor = 2;
