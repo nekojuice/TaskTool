@@ -6,8 +6,8 @@
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-ellipsis-v"
         severity="secondary"
-        :outlined="!showBlock.debugBlock"
-        @click="showBlock.debugBlock = !showBlock.debugBlock" />
+        :outlined="!_showBlock.debugBlock"
+        @click="_showBlock.debugBlock = !_showBlock.debugBlock" />
       <Button
         v-tooltip="'在瀏覽器新分頁開啟'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
@@ -36,29 +36,29 @@
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-book"
         severity="info"
-        :outlined="!showBlock.taskEditor"
+        :outlined="!_showBlock.taskEditor"
         @click="[toggleTaskBlock(), saveCache()]" />
       <Button
         v-tooltip="'新增任務'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-plus"
         severity="success"
-        :outlined="showBlock.taskEditor != 2"
+        :outlined="_showBlock.taskEditor != 2"
         @click="[toggleNewTask(), saveCache()]" />
       <Button
         v-tooltip="'時間軸編輯器'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-clock"
         severity="info"
-        :outlined="!showBlock.timeEditor"
-        @click="[(showBlock.timeEditor = !showBlock.timeEditor), saveCache()]" />
+        :outlined="!_showBlock.timeEditor"
+        @click="[(_showBlock.timeEditor = !_showBlock.timeEditor), saveCache()]" />
       <Button
         v-tooltip="'顯示刪除按鈕'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-unlock"
         severity="danger"
-        :outlined="!showBlock.deleteMode"
-        @click="[(showBlock.deleteMode = !showBlock.deleteMode), saveCache()]" />
+        :outlined="!_showBlock.deleteMode"
+        @click="[(_showBlock.deleteMode = !_showBlock.deleteMode), saveCache()]" />
       <div class="h-1rem w-2rem"></div>
       <FileUpload
         v-tooltip="'上傳並覆蓋資料'"
@@ -78,7 +78,7 @@
       <Button v-tooltip="'選項'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-cog" severity="secondary" outlined @click="showOptions = !showOptions" />
     </div>
     <!-- debugblock -->
-    <div v-if="showBlock.debugBlock" class="w-2rem flex justify-content-center align-content-end flex-wrap">
+    <div v-if="_showBlock.debugBlock" class="w-2rem flex justify-content-center align-content-end flex-wrap">
       <Button v-tooltip="'DEBUG, all tasks and cache'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="A" outlined @click="showStorageData()" />
       <Button v-tooltip="'DEBUG, current data'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="D" outlined @click="console.log('data', _data)" />
       <Button v-tooltip="'DEBUG, current data all times'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="T" outlined @click="console.log('time', _time)" />
@@ -88,10 +88,10 @@
   </div>
   <div class="main">
     <!-- Task Info -->
-    <Panel v-if="showBlock.taskEditor" :pt:root:style="taskBlockColor()" pt:header:style="padding: 0;" pt:content:style="padding: 18px;">
+    <Panel v-if="_showBlock.taskEditor" :pt:root:style="taskBlockColor()" pt:header:style="padding: 0;" pt:content:style="padding: 18px;">
       <div class="grid">
-        <h2 v-if="showBlock.taskEditor == 2" class="col-12">新增任務</h2>
-        <div v-if="showBlock.debugBlock" class="col-1">
+        <h2 v-if="_showBlock.taskEditor == 2" class="col-12">新增任務</h2>
+        <div v-if="_showBlock.debugBlock" class="col-1">
           <label for="taskId">編號</label>
           <InputNumber id="taskId" v-model="_data.id" inputClass="w-full" :min="0" size="small" :disabled="true" />
         </div>
@@ -100,8 +100,8 @@
           <InputText id="taskHeader" class="w-full" type="text" v-model="_data.taskHeader" @change="saveCache()" />
         </div>
         <div class="col-1">
-          <label v-if="showBlock.taskEditor == 2">新增</label>
-          <label v-if="showBlock.taskEditor == 1">儲存</label>
+          <label v-if="_showBlock.taskEditor == 2">新增</label>
+          <label v-if="_showBlock.taskEditor == 1">儲存</label>
           <br />
           <Button icon="pi pi-save" :severity="!_data.taskHeader?.trim() ? 'secondary' : 'warn'" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader?.trim()" />
         </div>
@@ -118,7 +118,7 @@
       </div>
     </Panel>
     <!-- Time Editor -->
-    <Panel v-if="showBlock.timeEditor" class="pl-3 pr-3" :pt:root:style="timeBlockColor() + 'margin-top: -2px;'">
+    <Panel v-if="_showBlock.timeEditor" class="pl-3 pr-3" :pt:root:style="timeBlockColor() + 'margin-top: -2px;'">
       <div class="grid">
         <div class="col-3 pb-0">
           <label>
@@ -169,7 +169,7 @@
           <ToggleSwitch v-model="showBlock.timeEditor" :falseValue="1" :trueValue="2" :pt:slider:style="showBlock.timeEditor == 2 ? 'background: #EF4444' : 'background: #27C662'"></ToggleSwitch> -->
         </div>
         <div class="col-1 pb-0">
-          <label v-if="showBlock.timeEditor == 1">加入</label>
+          <label v-if="_showBlock.timeEditor == 1">加入</label>
           <!-- <label v-if="showBlock.timeEditor == 2">扣除</label> -->
           <br />
           <Button icon="pi pi-save" :severity="!_data.taskHeader?.trim() ? 'secondary' : 'warn'" outlined raised @click="saveTime" :disabled="!_data.taskHeader?.trim()" />
@@ -204,7 +204,7 @@
         <div class="col">
           <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
             <Column rowReorder class="pr-0" style="width: 36px" />
-            <Column v-if="showBlock.debugBlock" header="編號" class="w-1 white-space-nowrap">
+            <Column v-if="_showBlock.debugBlock" header="編號" class="w-1 white-space-nowrap">
               <template #body="slotProps">
                 {{ slotProps.data.id }}
               </template>
@@ -221,7 +221,7 @@
                 {{ calEffort(slotProps.data.times) }}
               </template>
             </Column>
-            <Column v-if="showBlock.deleteMode" field="delete" header="刪除">
+            <Column v-if="_showBlock.deleteMode" field="delete" header="刪除">
               <template #body="slotProps">
                 <Button icon="pi pi-trash" severity="danger" size="small" raised @click="deleteTask(slotProps.data.id)" />
               </template>
@@ -245,8 +245,8 @@
                   :workTime="day.periods"
                   :restTime="[[710, 800]]"
                   :showDateAndSum="true"
-                  :deleteMode="showBlock.deleteMode"
-                  @click="[(_time.date = day.date), (showBlock.timeEditor = 1)]"
+                  :deleteMode="_showBlock.deleteMode"
+                  @click="[(_time.date = day.date), (_showBlock.timeEditor = 1)]"
                   @deleteDate="deleteDate(day.date)"
                   @periodEditorData="(data) => periodEditorLoadPeriod(data)"
                   :class="(day.date == _time.date ? 'orangeBackground' : '') + ' floatEffect cursorPointer'" />
@@ -339,7 +339,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import InputTextDate from '@/components/InputTextDate.vue';
 import Timeline from '@/components/Timeline.vue';
 
-import { convertDateToString } from '../service/commonService';
+import { convertDateToString, isValidPage, sendTabMessage, setStorage, getStorage, deleteStorage } from '../service/commonService';
 
 onMounted(() => {
   loadCache();
@@ -364,7 +364,7 @@ const _data = ref({
 });
 const _time = ref({ date: convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }), periods: [] });
 const _period = ref([new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()]);
-const showBlock = ref({
+const _showBlock = ref({
   taskEditor: 0,
   timeEditor: false,
   debugBlock: false,
@@ -380,74 +380,42 @@ const periodEditorData = ref({
   period: [0, 0]
 });
 
-const showStorageData = () => {
-  chrome.runtime.sendMessage({ action: 'getStorage', key: 'cache' }, (response) => {
-    console.log('cache', response.message);
-  });
-  chrome.runtime.sendMessage({ action: 'getStorage', key: 'tasks' }, (response) => {
-    console.log('tasks', response.message);
-  });
+const showStorageData = async () => {
+  console.log('cache', await getStorage('cache'));
+  console.log('tasks', await getStorage('tasks'));
 };
+
 const loadCache = async () => {
-  chrome.runtime.sendMessage({ action: 'getStorage', key: 'cache' }, (response) => {
-    if (response.message) {
-      _data.value = response.message;
-    } else {
-      _data.value = {
-        id: 0,
-        taskHeader: '',
-        taskUrl: '',
-        taskBranch: '',
-        times: []
-      };
-    }
-  });
-  chrome.runtime.sendMessage({ action: 'getStorage', key: 'UIcache' }, (response) => {
-    if (response.message) {
-      showBlock.value = response.message;
-      showBlock.value.deleteMode = false;
-    } else {
-      showBlock.value = {
-        taskEditor: false,
-        timeEditor: false,
-        debugBlock: false,
-        deleteMode: false
-      };
-    }
-  });
+  _data.value = (await getStorage('cache')) || _data.value;
+  _showBlock.value = (await getStorage('UIcache')) || _showBlock.value;
+  _showBlock.value.deleteMode = false;
 };
+
 const saveCache = () => {
-  chrome.runtime.sendMessage({ action: 'setStorage', obj: { cache: _data.value } }, (response) => {
-    console.log(response.message);
-  });
-  chrome.runtime.sendMessage({ action: 'setStorage', obj: { UIcache: showBlock.value } }, (response) => {
-    console.log(response.message);
-  });
+  setStorage({ cache: _data.value });
+  setStorage({ UIcache: _showBlock.value });
 };
+
 const loadTasks = async () => {
-  chrome.runtime.sendMessage({ action: 'getStorage', key: 'tasks' }, (response) => {
-    if (response.message) {
-      _tasks.value = response.message;
-    } else {
-      _tasks.value = [];
-    }
-  });
+  _tasks.value = (await getStorage('tasks')) || _tasks.value;
 };
+
 const saveTasks = () => {
   chrome.runtime.sendMessage({ action: 'setStorage', obj: { tasks: _tasks.value } }, (response) => {
     console.log(response.message);
   });
 };
+
 const deleteAllData = async () => {
-  chrome.runtime.sendMessage({ action: 'deleteStorage' }, async (response) => {
-    console.log(response.message);
-    await loadTasks();
-    await loadCache();
-  });
+  await deleteStorage(['tasks', 'cache']);
+  loadTasks();
+  loadCache();
 };
+
 const openInNewTab = (url) => {
   window.open(url, '_blank');
 };
+
 const openInNewWindow = (url, width = 800, height = 600, maximized = false) => {
   const windowOptions = {
     url: url,
@@ -465,18 +433,12 @@ const openInNewWindow = (url, width = 800, height = 600, maximized = false) => {
 };
 
 const saveOptions = () => {
-  chrome.runtime.sendMessage({ action: 'setStorage', obj: { optionsData: _optionsData.value } }, (response) => {
-    console.log(response.message);
-  });
+  setStorage({ optionsData: _optionsData.value });
 };
-const loadOptions = async () => {
-  chrome.runtime.sendMessage({ action: 'getStorage', key: 'optionsData' }, (response) => {
-    if (response.message) {
-      _optionsData.value = response.message;
-    }
 
-    executeDefaultOpenMode();
-  });
+const loadOptions = async () => {
+  _optionsData.value = (await getStorage('optionsData')) || _optionsData.value;
+  executeDefaultOpenMode();
 };
 const executeDefaultOpenMode = () => {
   if (_optionsData.value.hasExecutedOpenMode) {
@@ -508,29 +470,29 @@ const executeDefaultOpenMode = () => {
 const newTaskRestoreTempID = ref(-1);
 const toggleTaskBlock = () => {
   // off
-  if (showBlock.value.taskEditor) {
-    showBlock.value.taskEditor = 0;
+  if (_showBlock.value.taskEditor) {
+    _showBlock.value.taskEditor = 0;
   }
   // on
-  else if (!showBlock.value.taskEditor) {
-    showBlock.value.taskEditor = _tasks.value.filter((t) => t.id == _data.value.id).length ? 1 : 2;
+  else if (!_showBlock.value.taskEditor) {
+    _showBlock.value.taskEditor = _tasks.value.filter((t) => t.id == _data.value.id).length ? 1 : 2;
   }
 };
 const toggleNewTask = () => {
   // off
-  if (showBlock.value.taskEditor == 2) {
+  if (_showBlock.value.taskEditor == 2) {
     if (_tasks.value.filter((t) => t.id == newTaskRestoreTempID.value).length) {
       _data.value = { ..._tasks.value.filter((t) => t.id == newTaskRestoreTempID.value)[0] };
-      showBlock.value.taskEditor = 1;
+      _showBlock.value.taskEditor = 1;
     } else {
-      showBlock.value.taskEditor = 0;
+      _showBlock.value.taskEditor = 0;
     }
 
     return;
   }
   // on
-  else if (!showBlock.value.taskEditor || showBlock.value.taskEditor == 1) {
-    showBlock.value.taskEditor = 2;
+  else if (!_showBlock.value.taskEditor || _showBlock.value.taskEditor == 1) {
+    _showBlock.value.taskEditor = 2;
     newTaskRestoreTempID.value = _data.value.id;
   }
 
@@ -555,9 +517,9 @@ const toggleNewTask = () => {
   };
 };
 const taskBlockColor = () => {
-  if (showBlock.value.taskEditor == 1) {
+  if (_showBlock.value.taskEditor == 1) {
     return 'border-color: #F97316; border-width: 2px;';
-  } else if (showBlock.value.taskEditor == 2) {
+  } else if (_showBlock.value.taskEditor == 2) {
     return 'border-color: #22C55E; border-width: 2px;';
   }
 };
@@ -572,8 +534,8 @@ const timeBlockColor = () => {
 const taskListSelect = (data) => {
   _data.value = { ...data };
   newTaskRestoreTempID.value = data.id;
-  if (showBlock.value.taskEditor == 2) {
-    showBlock.value.taskEditor = 1;
+  if (_showBlock.value.taskEditor == 2) {
+    _showBlock.value.taskEditor = 1;
   }
 };
 function taskListSelectedColor(rowid) {
@@ -589,8 +551,8 @@ const saveTaskInfo = () => {
     _tasks.value.push({ ..._data.value });
   }
 
-  if (showBlock.value.taskEditor == 2) {
-    showBlock.value.taskEditor = 1;
+  if (_showBlock.value.taskEditor == 2) {
+    _showBlock.value.taskEditor = 1;
     newTaskRestoreTempID.value = -1;
   }
 
@@ -614,8 +576,8 @@ const saveTime = () => {
     _tasks.value[taskIndex] = { ..._data.value };
   }
 
-  if (showBlock.value.taskEditor == 2) {
-    showBlock.value.taskEditor = 1;
+  if (_showBlock.value.taskEditor == 2) {
+    _showBlock.value.taskEditor = 1;
   }
 
   saveTasks();
@@ -1064,12 +1026,12 @@ function deleteTask(rowid) {
 
         if (_tasks.value.length) {
           _data.value.id = Math.max(..._tasks.value.map((item) => item.id)) + 1;
-          if (showBlock.value.taskEditor == 1) {
-            showBlock.value.taskEditor = 2;
+          if (_showBlock.value.taskEditor == 1) {
+            _showBlock.value.taskEditor = 2;
           }
         } else {
           _data.value.id = 0;
-          showBlock.value.taskEditor = 2;
+          _showBlock.value.taskEditor = 2;
         }
 
         saveCache();
