@@ -12,10 +12,14 @@
     "background": {
         "service_worker": "background.js"
     },
+    "side_panel": {
+        "default_path": "index.html"
+    },
     "permissions": [
         "storage",
         "activeTab",
-        "scripting"
+        "scripting",
+        "sidePanel"
     ],
     "content_scripts": [
         {

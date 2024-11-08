@@ -30,6 +30,7 @@
           saveOptions();
           openInNewWindow('/index.html');
         " />
+      <Button v-tooltip="'在側邊欄開啟'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-bars" severity="secondary" outlined @click="openInSidePanel('/index.html')" />
       <div class="h-1rem w-2rem"></div>
       <Button
         v-tooltip="'任務內容編輯器'"
@@ -320,7 +321,7 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, onBeforeMount, ref, watch } from 'vue';
 
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -341,10 +342,13 @@ import Timeline from '@/components/Timeline.vue';
 
 import { convertDateToString, isValidPage, sendTabMessage, setStorage, getStorage, deleteStorage } from '../service/commonService';
 
+onBeforeMount(() => {
+  loadOptions();
+});
+
 onMounted(() => {
   loadCache();
   loadTasks();
-  loadOptions();
   window.addEventListener('keydown', handleKeydown);
 });
 
@@ -430,6 +434,12 @@ const openInNewWindow = (url, width = 800, height = 600, maximized = false) => {
   }
 
   chrome.windows.create(windowOptions);
+};
+
+const openInSidePanel = async (url) => {
+  const window = await chrome.windows.getCurrent({});
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  chrome.sidePanel.open({ tabId: tabs[0].id, windowId: window.id });
 };
 
 const saveOptions = () => {
