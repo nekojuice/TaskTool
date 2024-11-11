@@ -289,6 +289,16 @@
             @change="[saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
           <label for="defaultOpenMode.popup">懸浮小窗</label>
         </div>
+        <!-- 側邊欄無法由code打開 -->
+        <!-- <div class="flex items-center gap-2">
+          <RadioButton
+            v-model="_optionsData.defaultOpenMode"
+            inputId="defaultOpenMode.sidePanel"
+            name="defaultOpenMode"
+            value="sidePanel"
+            @change="[saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
+          <label for="defaultOpenMode.sidePanel">側邊欄</label>
+        </div> -->
         <div class="flex items-center gap-2">
           <RadioButton
             v-model="_optionsData.defaultOpenMode"
@@ -374,7 +384,7 @@ const _showBlock = ref({
   debugBlock: false,
   deleteMode: false
 });
-const _optionsData = ref({ defaultOpenMode: 'popup' });
+const _optionsData = ref({ defaultOpenMode: 'popup', tempOpenMode: '' });
 const defaultOpenModeMessage = ref('');
 const showOptions = ref(false);
 const periodEditorData = ref({
@@ -436,9 +446,11 @@ const openInNewWindow = (url, width = 800, height = 600, maximized = false) => {
   chrome.windows.create(windowOptions);
 };
 
-const openInSidePanel = async (url) => {
+const openInSidePanel = async () => {
   const window = await chrome.windows.getCurrent({});
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  _optionsData.value.tempOpenMode = 'sidePanel';
+  saveOptions();
   chrome.sidePanel.open({ tabId: tabs[0].id, windowId: window.id });
 };
 
@@ -457,7 +469,18 @@ const executeDefaultOpenMode = () => {
     return;
   }
 
+  if (_optionsData.value.tempOpenMode === 'sidePanel') {
+    _optionsData.value.tempOpenMode = '';
+    saveOptions();
+    return;
+  }
   if (_optionsData.value.defaultOpenMode === 'popup') {
+    const app = document.getElementById('app');
+    document.body.style.width = '800px';
+    document.body.style.height = '600px';
+    document.body.style.overflow = 'hidden';
+    app.style.width = '800px';
+    app.style.height = '600px';
     return;
   }
   if (_optionsData.value.defaultOpenMode === 'newTab') {
