@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
-    "name": "nkjTaskTool",
-    "version": "1.3",
+    "name": "任務小工具",
+    "version": "1.4",
     "description": "for work",
     "icons": {
         "128": "icons/chick128x128.png"

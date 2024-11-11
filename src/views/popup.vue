@@ -90,38 +90,43 @@
   <div class="main">
     <!-- Task Info -->
     <Panel v-if="_showBlock.taskEditor" :pt:root:style="taskBlockColor()" pt:header:style="padding: 0;" pt:content:style="padding: 18px;">
-      <div class="grid">
-        <h2 v-if="_showBlock.taskEditor == 2" class="col-12">新增任務</h2>
-        <div v-if="_showBlock.debugBlock" class="col-1">
-          <label for="taskId">編號</label>
-          <InputNumber id="taskId" v-model="_data.id" inputClass="w-full" :min="0" size="small" :disabled="true" />
-        </div>
-        <div class="col">
-          <label for="taskHeader">標題 <label v-if="checkUnsaved" style="color: gray">(未儲存)</label></label>
-          <InputText id="taskHeader" class="w-full" type="text" v-model="_data.taskHeader" @change="saveCache()" />
-        </div>
-        <div class="col-1">
-          <label v-if="_showBlock.taskEditor == 2">新增</label>
-          <label v-if="_showBlock.taskEditor == 1">儲存</label>
-          <br />
+      <h2 v-if="_showBlock.taskEditor == 2" class="w-full">新增任務</h2>
+      <div class="flex">
+        <div class="flex flex-shrink-0 flex-column mr-2">
+          <label v-if="_showBlock.taskEditor == 2" class="white-space-nowrap">新增</label>
+          <label v-if="_showBlock.taskEditor == 1" class="white-space-nowrap">儲存</label>
           <Button icon="pi pi-save" :severity="!_data.taskHeader?.trim() ? 'secondary' : 'warn'" outlined raised @click="saveTaskInfo()" :disabled="!_data.taskHeader?.trim()" />
+        </div>
+        <div v-if="_showBlock.debugBlock" class="flex flex-shrink-0 flex-column mr-2">
+          <label for="taskId" class="white-space-nowrap">編號</label>
+          <InputNumber id="taskId" v-model="_data.id" inputClass="w-4rem" :min="0" :disabled="true" />
+        </div>
+        <div class="flex flex-grow-1 flex-shrink-1 flex-column">
+          <label for="taskHeader" class="white-space-nowrap">標題<label v-if="checkUnsaved" style="color: gray"> (未儲存)</label></label>
+          <InputText id="taskHeader" class="w-full" type="text" v-model="_data.taskHeader" @change="saveCache()" />
         </div>
       </div>
       <div class="grid">
         <div class="col-6">
-          <label for="taskUrl"> 連結 <Button class="h-1rem w-1rem" icon="pi pi-link" severity="secondary" @click="if (_data.taskUrl?.trim()) openInNewTab(_data.taskUrl);" text size="small" /> </label>
+          <label for="taskUrl" class="white-space-nowrap">
+            連結 <Button class="h-1rem w-1rem" icon="pi pi-link" severity="secondary" @click="if (_data.taskUrl?.trim()) openInNewTab(_data.taskUrl);" text size="small" />
+          </label>
           <InputText id="taskUrl" class="w-full" type="text" v-model="_data.taskUrl" @change="saveCache()" />
         </div>
         <div class="col-6">
-          <label for="taskBranch">分支</label>
+          <label for="taskBranch" class="white-space-nowrap">分支</label>
           <InputText id="taskBranch" class="w-full" type="text" v-model="_data.taskBranch" @change="saveCache()" />
         </div>
       </div>
     </Panel>
     <!-- Time Editor -->
-    <Panel v-if="_showBlock.timeEditor" class="pl-3 pr-3" :pt:root:style="timeBlockColor() + 'margin-top: -2px;'">
-      <div class="grid">
-        <div class="col-3 pb-0">
+    <Panel v-if="_showBlock.timeEditor" class="" :pt:root:style="timeBlockColor() + 'margin-top: -2px;'" pt:header:style="padding: 0;" pt:content:style="padding: 18px;">
+      <div class="flex flex-wrap">
+        <div class="flex flex-column flex-shrink-0 mr-2">
+          <label v-if="_showBlock.timeEditor == 1">加入</label>
+          <Button icon="pi pi-save" :severity="!_data.taskHeader?.trim() ? 'secondary' : 'warn'" outlined raised @click="saveTime" :disabled="!_data.taskHeader?.trim()" />
+        </div>
+        <div class="flex flex-column flex-shrink-0 mr-2">
           <label>
             日期&nbsp;
             <Button
@@ -134,78 +139,76 @@
               :severity="_time.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }) ? 'secondary' : 'primary'"
               :disabled="_time.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })" />
           </label>
-          <InputTextDate class="w-full" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>&nbsp;
+          <InputTextDate class="w-9rem" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>
         </div>
-        <div class="col-6 pb-0">
-          <label>
-            時段&nbsp;
-            <Button
-              class="h-1rem"
-              outlined
-              raised
-              @click="_period = [new Date().getHours() * 60 + new Date().getMinutes(), new Date().getHours() * 60 + new Date().getMinutes() + 60]"
-              label="現在為開始"
-              size="small" />
-            &nbsp;
-            <Button
-              class="h-1rem"
-              outlined
-              raised
-              @click="_period = [new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()]"
-              label="現在為結束"
-              size="small" />
-          </label>
-          <div class="w-full">
-            <InputNumber v-model="computedStartTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
-            <InputNumber v-model="computedStartTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
-            &nbsp;~&nbsp;
-            <InputNumber v-model="computedEndTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
-            <InputNumber v-model="computedEndTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
+
+        <div class="flex flex-nowrap mt-1">
+          <div class="flex flex-column">
+            <div class="flex flex-row mb-1">
+              <Button
+                class="h-1rem"
+                outlined
+                raised
+                @click="_period = [new Date().getHours() * 60 + new Date().getMinutes(), new Date().getHours() * 60 + new Date().getMinutes() + 60]"
+                label="現在為開始"
+                size="small" />
+            </div>
+            <div class="flex flex-row">
+              <InputNumber v-model="computedStartTimeHour" inputClass="w-3rem" :min="0" :max="24" />
+              <span class="align-items-center justify-content-center align-self-center">:</span>
+              <InputNumber v-model="computedStartTimeMinute" inputClass="w-3rem" :min="0" :max="60" />
+            </div>
+          </div>
+          <div class="flex flex-row"><span class="align-items-center justify-content-center align-self-center">~</span></div>
+          <div class="flex flex-column">
+            <div class="flex flex-row mb-1">
+              <Button
+                class="h-1rem"
+                outlined
+                raised
+                @click="_period = [new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()]"
+                label="現在為結束"
+                size="small" />
+            </div>
+            <div class="flex flex-row">
+              <InputNumber v-model="computedEndTimeHour" inputClass="w-3rem" :min="0" :max="24" />
+              <span class="align-items-center justify-content-center align-self-center">:</span>
+              <InputNumber v-model="computedEndTimeMinute" inputClass="w-3rem" :min="0" :max="60" />
+            </div>
           </div>
         </div>
-        <div class="col-2 pb-0">
-          <!-- <label v-if="showBlock.timeEditor == 1">新增模式</label>
-          <label v-if="showBlock.timeEditor == 2">扣除模式</label>
-          <br />
-          <ToggleSwitch v-model="showBlock.timeEditor" :falseValue="1" :trueValue="2" :pt:slider:style="showBlock.timeEditor == 2 ? 'background: #EF4444' : 'background: #27C662'"></ToggleSwitch> -->
-        </div>
-        <div class="col-1 pb-0">
-          <label v-if="_showBlock.timeEditor == 1">加入</label>
-          <!-- <label v-if="showBlock.timeEditor == 2">扣除</label> -->
-          <br />
-          <Button icon="pi pi-save" :severity="!_data.taskHeader?.trim() ? 'secondary' : 'warn'" outlined raised @click="saveTime" :disabled="!_data.taskHeader?.trim()" />
-        </div>
-        <div class="col-12 p-0">
-          <Slider
-            class="col-12"
-            v-model="_period"
-            range
-            :step="1"
-            :max="1440"
-            pt:startHandler:style="margin-left: -10px; margin-top: -20px; z-index: 10; border-radius: 0; background: transparent; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 10px solid gray;"
-            pt:endHandler:style="margin-left: 0px; margin-top: -20px; z-index: 10; z-index: 10; border-radius: 0; background: transparent; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid gray;"
-            pt:range:style="height: 10px; margin-top: 10px; background: repeating-linear-gradient(45deg, rgba(249, 115, 22, 1),  rgba(249, 115, 22, 0.5) 4px, transparent 4px, transparent 7px);"
-            style="background: rgba(0, 0, 0, 0)" />
-          <br />
-          <Timeline
-            class="col-12 p-0"
-            :date="_time.date"
-            :workTime="selectedDateTimeline?.periods"
-            :restTime="[[710, 800]]"
-            :showScale="true"
-            style="margin-top: -30px"
-            @periodEditorData="(data) => periodEditorLoadPeriod(data)" />
-        </div>
+      </div>
+
+      <div class="pl-3 pr-3" style="margin-top: 30px">
+        <Slider
+          class=""
+          v-model="_period"
+          range
+          :step="1"
+          :max="1440"
+          pt:startHandler:style="margin-left: -10px; margin-top: -23px; z-index: 10; border-radius: 0; background: transparent; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 10px solid gray;"
+          pt:endHandler:style="margin-left: 0px; margin-top: -23px; z-index: 10; z-index: 10; border-radius: 0; background: transparent; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid gray;"
+          pt:range:style="height: 10px; margin-top: -3px; background: repeating-linear-gradient(45deg, rgba(249, 115, 22, 1),  rgba(249, 115, 22, 0.5) 4px, transparent 4px, transparent 7px);"
+          style="background: rgba(0, 0, 0, 0)" />
+        <br />
+        <Timeline
+          class="p-0"
+          :date="_time.date"
+          :workTime="selectedDateTimeline?.periods"
+          :restTime="[[710, 800]]"
+          :showScale="true"
+          style="margin-top: -30px"
+          @periodEditorData="(data) => periodEditorLoadPeriod(data)" />
       </div>
     </Panel>
     <!-- Tasks List and Data -->
     <ConfirmDialog group="deleteTask"></ConfirmDialog>
     <div class="scrollTarget">
-      <div class="grid">
-        <div class="col">
+      <div class="custom-grid">
+        <div class="custom-col-8">
           <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
-            <Column rowReorder class="pr-0" style="width: 36px" />
-            <Column v-if="_showBlock.debugBlock" header="編號" class="w-1 white-space-nowrap">
+            <Column rowReorder class="pr-0" style="width: 36px; max-width: 36px" />
+            <Column v-if="_showBlock.debugBlock" header="#" class="w-1 white-space-nowrap">
               <template #body="slotProps">
                 {{ slotProps.data.id }}
               </template>
@@ -229,13 +232,12 @@
             </Column>
           </DataTable>
         </div>
-        <div v-if="_tasks.filter((t) => t.id == _data.id).length" class="col-4">
-          任務:
+        <div v-if="_tasks.filter((t) => t.id == _data.id).length" class="custom-col-4" style="min-width: 180px">
           <Tag severity="warn">
-            <h3 class="font-bold">{{ _data.taskHeader }}</h3>
+            <h3 class="font-bold" style="max-width: 178px">{{ _data.taskHeader }}</h3>
           </Tag>
           <br />
-          <span v-if="!sortedTimelines.length">目前沒有時數紀錄</span>
+          <span v-if="!sortedTimelines.length">此任務沒有時數紀錄</span>
           <div class="grouped-timeline">
             <div v-for="week in groupedTimelines" :key="week.weekKey" class="mt-2">
               <Tag :value="week.formattedWeek"></Tag>
@@ -342,10 +344,10 @@ import Column from 'primevue/column';
 import FileUpload from 'primevue/fileupload';
 import Panel from 'primevue/panel';
 import ConfirmDialog from 'primevue/confirmdialog';
+import { useConfirm } from 'primevue/useconfirm';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import RadioButton from 'primevue/radiobutton';
-import { useConfirm } from 'primevue/useconfirm';
 
 import InputTextDate from '@/components/InputTextDate.vue';
 import Timeline from '@/components/Timeline.vue';
@@ -1188,5 +1190,34 @@ const checkUnsaved = computed(() => {
 
 .orangeBackground {
   background-color: #f99c165c;
+}
+
+.custom-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -0.5rem;
+  margin-left: -0.5rem;
+  margin-top: -0.5rem;
+}
+.custom-col-8 {
+  flex: 0 0 auto;
+  width: 66.6667%;
+}
+.custom-col-4 {
+  flex: 0 0 auto;
+  width: 33.3333%;
+  padding: 0.5rem;
+}
+@media (max-width: 799px) {
+  .dataBlock {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .custom-col-8,
+  .custom-col-4 {
+    width: 100%;
+    min-width: auto; /* 移除 min-width 的限制 */
+  }
 }
 </style>
