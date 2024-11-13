@@ -2,13 +2,6 @@
   <div class="sidenav p-0 flex justify-content-center flex-wrap">
     <div class="w-2rem flex justify-content-center align-content-start flex-wrap">
       <Button
-        v-tooltip="'開啟debug模式'"
-        class="h-2rem w-2rem flex align-items-center justify-content-center"
-        icon="pi pi-ellipsis-v"
-        severity="secondary"
-        :outlined="!_showBlock.debugBlock"
-        @click="_showBlock.debugBlock = !_showBlock.debugBlock" />
-      <Button
         v-tooltip="'在瀏覽器新分頁開啟'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-tag"
@@ -46,6 +39,7 @@
         severity="success"
         :outlined="_showBlock.taskEditor != 2"
         @click="[toggleNewTask(), saveCache()]" />
+      <div class="h-1rem w-2rem"></div>
       <Button
         v-tooltip="'時間軸編輯器'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
@@ -53,6 +47,7 @@
         severity="info"
         :outlined="!_showBlock.timeEditor"
         @click="[(_showBlock.timeEditor = !_showBlock.timeEditor), saveCache()]" />
+      <div class="h-1rem w-2rem"></div>
       <Button
         v-tooltip="'顯示刪除按鈕'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
@@ -60,21 +55,6 @@
         severity="danger"
         :outlined="!_showBlock.deleteMode"
         @click="[(_showBlock.deleteMode = !_showBlock.deleteMode), saveCache()]" />
-      <div class="h-1rem w-2rem"></div>
-      <FileUpload
-        v-tooltip="'上傳並覆蓋資料'"
-        name="demo[]"
-        mode="basic"
-        auto
-        customUpload
-        chooseIcon="pi pi-upload"
-        :chooseButtonProps="{ label: '', class: 'h-2rem w-2rem flex align-items-center justify-content-center', severity: 'danger', outlined: true }"
-        accept=".json"
-        :maxFileSize="1000000"
-        @select="fileOnChange($event)">
-      </FileUpload>
-      <Button v-tooltip="'下載資料(ctrl + s)'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
-      <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
       <div class="h-1rem w-2rem"></div>
       <Button v-tooltip="'選項'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-cog" severity="secondary" outlined @click="showOptions = !showOptions" />
     </div>
@@ -142,39 +122,27 @@
           <InputTextDate class="w-9rem" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>
         </div>
 
-        <div class="flex flex-nowrap mt-1">
-          <div class="flex flex-column">
-            <div class="flex flex-row mb-1">
-              <Button
-                class="h-1rem"
-                outlined
-                raised
-                @click="_period = [new Date().getHours() * 60 + new Date().getMinutes(), new Date().getHours() * 60 + new Date().getMinutes() + 60]"
-                label="現在為開始"
-                size="small" />
-            </div>
-            <div class="flex flex-row">
-              <InputNumber v-model="computedStartTimeHour" inputClass="w-3rem" :min="0" :max="24" />
-              <span class="align-items-center justify-content-center align-self-center">:</span>
-              <InputNumber v-model="computedStartTimeMinute" inputClass="w-3rem" :min="0" :max="60" />
-            </div>
+        <div class="flex flex-column">
+          <div class="flex flex-row mt-2 justify-content-center">
+            <Button
+              class="h-1rem mr-2"
+              outlined
+              raised
+              @click="_period = [new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()]"
+              icon="pi pi-sign-in"
+              v-tooltip.top="'設定現在為結束點'"
+              size="small" />
+            <Button
+              class="h-1rem"
+              outlined
+              raised
+              @click="_period = [new Date().getHours() * 60 + new Date().getMinutes(), new Date().getHours() * 60 + new Date().getMinutes() + 60]"
+              icon="pi pi-sign-out"
+              v-tooltip.top="'設定現在為起始點'"
+              size="small" />
           </div>
-          <div class="flex flex-row"><span class="align-items-center justify-content-center align-self-center">~</span></div>
-          <div class="flex flex-column">
-            <div class="flex flex-row mb-1">
-              <Button
-                class="h-1rem"
-                outlined
-                raised
-                @click="_period = [new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()]"
-                label="現在為結束"
-                size="small" />
-            </div>
-            <div class="flex flex-row">
-              <InputNumber v-model="computedEndTimeHour" inputClass="w-3rem" :min="0" :max="24" />
-              <span class="align-items-center justify-content-center align-self-center">:</span>
-              <InputNumber v-model="computedEndTimeMinute" inputClass="w-3rem" :min="0" :max="60" />
-            </div>
+          <div class="flex flex-row mt-2">
+            <PeriodInput v-model="_period" />
           </div>
         </div>
       </div>
@@ -263,11 +231,7 @@
     <Dialog v-model:visible="periodEditorData.showPeriodEditor" modal header="更改時間軸片段" :style="{ width: '25rem' }">
       <div>日期: {{ periodEditorData.date }} <Tag class="h-1rem" severity="info" :value="new Intl.DateTimeFormat('zh-TW', { weekday: 'short' }).format(new Date(periodEditorData.date))"></Tag></div>
       <div class="w-full">
-        <InputNumber v-model="periodEditorComputedStartTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
-        <InputNumber v-model="periodEditorComputedStartTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
-        &nbsp;~&nbsp;
-        <InputNumber v-model="periodEditorComputedEndTimeHour" inputClass="w-3rem" :min="0" :max="24" size="small" />&nbsp;:&nbsp;
-        <InputNumber v-model="periodEditorComputedEndTimeMinute" inputClass="w-3rem" :min="0" :max="60" size="small" />
+        <PeriodInput v-model="periodEditorData.period" />
       </div>
       <div class="grid mt-4">
         <Button class="col-2" type="button" label="刪除" severity="danger" @click="[(periodEditorData.showPeriodEditor = false), periodEditorDeletePeriod()]"></Button>
@@ -278,7 +242,7 @@
     </Dialog>
     <!-- options -->
     <Dialog v-model:visible="showOptions" header="選項" :style="{ width: '25rem' }" :modal="true" :draggable="false">
-      <h3>
+      <h3 class="font-bold">
         開啟方式 <span class="text-sm" style="color: red">{{ defaultOpenModeMessage }}</span>
       </h3>
       <div class="flex flex-wrap gap-4">
@@ -329,20 +293,48 @@
           <label for="defaultOpenMode.newWindow_maximized">新視窗(視窗最大化)</label>
         </div>
       </div>
-      <h3>休息時段 <span class="text-sm" style="color: black"></span></h3>
+      <h3 class="font-bold mt-4">休息時段 <span class="text-sm" style="color: black"></span></h3>
       <div>
         <span>上班&nbsp;</span>
-        <TimeInput v-model="_optionsData.restTime.workOn" />
+        <TimeInput v-model="_optionsData.restTime.workOn" @change="saveOptions()" />
       </div>
       <div>
         <span>午休&nbsp;</span>
-        <PeriodInput v-model="_optionsData.restTime.lunch" />
+        <PeriodInput v-model="_optionsData.restTime.lunch" @change="saveOptions()" />
       </div>
       <div>
         <span>下班&nbsp;</span>
-        <TimeInput v-model="_optionsData.restTime.workOff" />
+        <TimeInput v-model="_optionsData.restTime.workOff" @change="saveOptions()" />
       </div>
       <Timeline class="p-0 mt-2" :restTime="[[0, _optionsData.restTime.workOn], _optionsData.restTime.lunch, [_optionsData.restTime.workOff, 1440]]" :showScale="false" />
+      <h3 class="font-bold mt-4">其他</h3>
+      <div class="flex flex-row">
+        <Button
+          v-tooltip.top="'開啟debug模式'"
+          class="h-2rem w-2rem flex"
+          icon="pi pi-ellipsis-v"
+          severity="secondary"
+          :outlined="!_showBlock.debugBlock"
+          @click="_showBlock.debugBlock = !_showBlock.debugBlock" />
+        <div class="h-2rem w-1rem flex"></div>
+        <FileUpload
+          v-tooltip.top="'上傳並覆蓋資料'"
+          name="demo[]"
+          mode="basic"
+          auto
+          customUpload
+          chooseIcon="pi pi-upload"
+          :chooseButtonProps="{ label: '', class: 'h-2rem w-2rem flex ', severity: 'danger', outlined: true }"
+          accept=".json"
+          :maxFileSize="1000000"
+          @select="fileOnChange($event)">
+        </FileUpload>
+        <Button v-tooltip.top="'下載資料(ctrl + s)'" class="h-2rem w-2rem flex" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
+        <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
+      </div>
+      <div class="h-1rem w-2rem"></div>
+      <h3 class="font-bold mt-4">刪除設定檔</h3>
+      <Button v-tooltip.focus="'重新開啟擴充功能以重新整理設定檔'" label="還原為預設值" icon="pi pi-trash" severity="danger" size="small" raised @click="deleteStorage(['optionsData'])" />
     </Dialog>
   </div>
 </template>
@@ -402,7 +394,7 @@ const _showBlock = ref({
   debugBlock: false,
   deleteMode: false
 });
-const _optionsData = ref({ defaultOpenMode: 'popup', tempOpenMode: '', restTime: {} });
+const _optionsData = ref({ defaultOpenMode: 'popup', tempOpenMode: '', restTime: { workOn: 510, lunch: [710, 800], workOff: 1080 } });
 const defaultOpenModeMessage = ref('');
 const showOptions = ref(false);
 const periodEditorData = ref({
@@ -713,97 +705,6 @@ const calEffort = (workData) => {
   return personDays;
 };
 
-// 時間軸編輯器
-const computedStartTimeHour = computed({
-  get() {
-    return hourGetter(_period.value, 0);
-  },
-  set(value) {
-    hourSetter(_period.value, 0, value);
-    periodSwitcher(_period.value);
-    periodLimiter(_period.value);
-  }
-});
-const computedStartTimeMinute = computed({
-  get() {
-    return minuteGetter(_period.value, 0);
-  },
-  set(value) {
-    minuteSetter(_period.value, 0, value);
-    periodSwitcher(_period.value);
-    periodLimiter(_period.value);
-  }
-});
-const computedEndTimeHour = computed({
-  get() {
-    return hourGetter(_period.value, 1);
-  },
-  set(value) {
-    hourSetter(_period.value, 1, value);
-    periodSwitcher(_period.value);
-    periodLimiter(_period.value);
-  }
-});
-const computedEndTimeMinute = computed({
-  get() {
-    return minuteGetter(_period.value, 1);
-  },
-  set(value) {
-    minuteSetter(_period.value, 1, value);
-    periodSwitcher(_period.value);
-    periodLimiter(_period.value);
-  }
-});
-
-watch(
-  () => _period.value,
-  (period) => {
-    periodSwitcher(period);
-  }
-);
-
-// 時間軸片段修改視窗
-const periodEditorComputedStartTimeHour = computed({
-  get() {
-    return hourGetter(periodEditorData.value.period, 0);
-  },
-  set(value) {
-    hourSetter(periodEditorData.value.period, 0, value);
-    periodSwitcher(periodEditorData.value.period);
-    periodLimiter(periodEditorData.value.period);
-  }
-});
-const periodEditorComputedStartTimeMinute = computed({
-  get() {
-    return minuteGetter(periodEditorData.value.period, 0);
-  },
-  set(value) {
-    minuteSetter(periodEditorData.value.period, 0, value);
-    periodSwitcher(periodEditorData.value.period);
-    periodLimiter(periodEditorData.value.period);
-  }
-});
-const periodEditorComputedEndTimeHour = computed({
-  get() {
-    return hourGetter(periodEditorData.value.period, 1);
-  },
-  set(value) {
-    hourSetter(periodEditorData.value.period, 1, value);
-    periodSwitcher(periodEditorData.value.period);
-    periodLimiter(periodEditorData.value.period);
-  }
-});
-const periodEditorComputedEndTimeMinute = computed({
-  get() {
-    return minuteGetter(periodEditorData.value.period, 1);
-  },
-  set(value) {
-    minuteSetter(periodEditorData.value.period, 1, value);
-    periodSwitcher(periodEditorData.value.period);
-    periodLimiter(periodEditorData.value.period);
-  }
-});
-
 const periodEditorLoadPeriod = (emitData) => {
   periodEditorData.value.showPeriodEditor = emitData.showPeriodEditor;
   periodEditorData.value.date = emitData.date;
@@ -830,32 +731,6 @@ const periodEditorDeletePeriod = () => {
 
   saveTasks();
   saveCache();
-};
-
-const hourGetter = (periodArray, index) => {
-  return Math.floor(periodArray[index] / 60);
-};
-const hourSetter = (periodArray, index, value) => {
-  periodArray[index] = +value * 60 + (periodArray[index] % 60);
-};
-const minuteGetter = (periodArray, index) => {
-  return periodArray[index] % 60;
-};
-const minuteSetter = (periodArray, index, value) => {
-  periodArray[index] = Math.floor(periodArray[index] / 60) * 60 + +value;
-};
-const periodSwitcher = (periodArray) => {
-  if (periodArray[1] < periodArray[0]) {
-    [periodArray[0], periodArray[1]] = [periodArray[1], periodArray[0]];
-  }
-};
-const periodLimiter = (periodArray) => {
-  if (periodArray[0] < 0) {
-    periodArray[0] = 0;
-  }
-  if (periodArray[1] > 1440) {
-    periodArray[1] = 1440;
-  }
 };
 
 const selectedDateTimeline = computed(() => {

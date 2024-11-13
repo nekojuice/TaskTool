@@ -6,7 +6,7 @@
       @input="validateHourInput"
       @wheel.prevent="adjustHourByWheel"
       @keydown="handleHourKeydown"
-      class="w-3rem"
+      class="w-2rem"
       :style="inputStyle"
       @change="emit('change')" />
     :
@@ -16,7 +16,7 @@
       @input="validateMinuteInput"
       @wheel.prevent="adjustMinuteByWheel"
       @keydown="handleMinuteKeydown"
-      class="w-3rem"
+      class="w-2rem"
       :style="inputStyle"
       @change="emit('change')" />
   </span>
