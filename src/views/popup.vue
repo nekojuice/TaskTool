@@ -175,7 +175,8 @@
           v-model="_period"
           range
           :step="1"
-          :max="1440"
+          :min="_optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
+          :max="_optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
           pt:startHandler:style="margin-left: -10px; margin-top: -23px; z-index: 10; border-radius: 0; background: transparent; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 10px solid gray;"
           pt:endHandler:style="margin-left: 0px; margin-top: -23px; z-index: 10; z-index: 10; border-radius: 0; background: transparent; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid gray;"
           pt:range:style="height: 10px; margin-top: -3px; background: repeating-linear-gradient(45deg, rgba(249, 115, 22, 1),  rgba(249, 115, 22, 0.5) 4px, transparent 4px, transparent 7px);"
@@ -185,7 +186,9 @@
           class="p-0"
           :date="_time.date"
           :workTime="selectedDateTimeline?.periods"
-          :restTime="[[710, 800]]"
+          :restTime="applyOptionToRestTime()"
+          :displayStartTime="_optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
+          :displayEndTime="_optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
           :showScale="true"
           style="margin-top: -30px"
           @periodEditorData="(data) => periodEditorLoadPeriod(data)" />
@@ -236,7 +239,9 @@
                   v-for="day in week.days"
                   :date="day.date"
                   :workTime="day.periods"
-                  :restTime="[[710, 800]]"
+                  :restTime="applyOptionToRestTime()"
+                  :displayStartTime="_optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
+                  :displayEndTime="_optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
                   :showDateAndSum="true"
                   :deleteMode="_showBlock.deleteMode"
                   @click="[(_time.date = day.date), (_showBlock.timeEditor = 1)]"
@@ -342,20 +347,30 @@
           <label for="defaultOpenMode.newWindow_maximized">新視窗(視窗最大化)</label>
         </div>
       </div>
-      <h3 class="font-bold mt-4">休息時段 <span class="text-sm" style="color: black"></span></h3>
+      <h3 class="font-bold mt-4">固定休息時段 <span class="text-sm" style="color: black"></span></h3>
       <div>
+        <ToggleSwitch v-model="_optionsData.restTime.enableWorkOn" @change="saveOptions()" />
         <span>上班&nbsp;</span>
         <TimeInput v-model="_optionsData.restTime.workOn" @change="saveOptions()" />
+        <Checkbox class="ml-2" id="hideNotWorking" v-model="_optionsData.restTime.hideNotWorking" binary @change="saveOptions()" />
+        <label for="hideNotWorking">隱藏非上班時段</label>
       </div>
       <div>
-        <span>午休&nbsp;</span>
-        <PeriodInput v-model="_optionsData.restTime.lunch" @change="saveOptions()" />
-      </div>
-      <div>
+        <ToggleSwitch v-model="_optionsData.restTime.enableWorkOff" @change="saveOptions()" />
         <span>下班&nbsp;</span>
         <TimeInput v-model="_optionsData.restTime.workOff" @change="saveOptions()" />
       </div>
-      <Timeline class="p-0 mt-2" :restTime="[[0, _optionsData.restTime.workOn], _optionsData.restTime.lunch, [_optionsData.restTime.workOff, 1440]]" :showScale="false" />
+      <div>
+        <ToggleSwitch v-model="_optionsData.restTime.enableLunch" @change="saveOptions()" />
+        <span>午休&nbsp;</span>
+        <PeriodInput v-model="_optionsData.restTime.lunch" @change="saveOptions()" />
+      </div>
+      <Timeline
+        class="p-0 mt-2"
+        :restTime="applyOptionToRestTime()"
+        :displayStartTime="_optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
+        :displayEndTime="_optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
+        :showScale="true" />
       <h3 class="font-bold mt-4">其他</h3>
       <div class="flex flex-row">
         <Button
@@ -404,6 +419,8 @@ import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import RadioButton from 'primevue/radiobutton';
 import Drawer from 'primevue/drawer';
+import Checkbox from 'primevue/checkbox';
+import ToggleSwitch from 'primevue/toggleswitch';
 
 import InputTextDate from '@/components/InputTextDate.vue';
 import Timeline from '@/components/Timeline.vue';
@@ -445,7 +462,11 @@ const _showBlock = ref({
   deleteMode: false,
   taskListBlockPin: false
 });
-const _optionsData = ref({ defaultOpenMode: 'popup', tempOpenMode: '', restTime: { workOn: 510, lunch: [710, 800], workOff: 1080 } });
+const _optionsData = ref({
+  defaultOpenMode: 'popup',
+  tempOpenMode: '',
+  restTime: { workOn: 510, lunch: [710, 800], workOff: 1110, hideNotWorking: false, enableWorkOn: false, enableWorkOff: false, enableLunch: true }
+});
 const defaultOpenModeMessage = ref('');
 const showOptions = ref(false);
 const showTaskListDrawer = ref(false);
@@ -1094,6 +1115,21 @@ const checkUnsaved = computed(() => {
     return false;
   }
 });
+
+const applyOptionToRestTime = () => {
+  const resultRestTimeArray = [];
+  if (_optionsData.value.restTime?.enableWorkOn === true) {
+    resultRestTimeArray.push([0, _optionsData.value.restTime?.workOn]);
+  }
+  if (_optionsData.value.restTime?.enableLunch === true) {
+    resultRestTimeArray.push(_optionsData.value.restTime?.lunch);
+  }
+  if (_optionsData.value.restTime?.enableWorkOff === true) {
+    resultRestTimeArray.push([_optionsData.value.restTime?.workOff, 1440]);
+  }
+
+  return resultRestTimeArray;
+};
 </script>
 
 <style scoped>
