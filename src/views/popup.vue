@@ -23,7 +23,14 @@
           saveOptions();
           openInNewWindow('/index.html');
         " />
-      <Button v-tooltip="'在側邊欄開啟'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-bars" severity="secondary" outlined @click="openInSidePanel('/index.html')" />
+      <Button
+        v-tooltip="'在側邊欄開啟'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-bars"
+        severity="secondary"
+        outlined
+        @click="openInSidePanel('/index.html')"
+        :style="isSidePanel ? 'background-color: lightgray;' : ''" />
       <div class="h-1rem w-2rem"></div>
       <Button
         v-tooltip="'任務清單'"
@@ -442,6 +449,7 @@ const _optionsData = ref({ defaultOpenMode: 'popup', tempOpenMode: '', restTime:
 const defaultOpenModeMessage = ref('');
 const showOptions = ref(false);
 const showTaskListDrawer = ref(false);
+const isSidePanel = ref(false);
 const periodEditorData = ref({
   showPeriodEditor: false,
   date: '',
@@ -502,11 +510,18 @@ const openInNewWindow = (url, width = 800, height = 600, maximized = false) => {
 };
 
 const openInSidePanel = async () => {
-  const window = await chrome.windows.getCurrent({});
+  const currentWindow = await chrome.windows.getCurrent({});
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  if (isSidePanel.value) {
+    window.close();
+  }
+
   _optionsData.value.tempOpenMode = 'sidePanel';
   saveOptions();
-  chrome.sidePanel.open({ tabId: tabs[0].id, windowId: window.id });
+  await chrome.sidePanel.open({ tabId: tabs[0].id, windowId: currentWindow.id });
+  _optionsData.value.tempOpenMode = '';
+  saveOptions();
 };
 
 const saveOptions = () => {
@@ -526,6 +541,7 @@ const executeDefaultOpenMode = () => {
 
   if (_optionsData.value.tempOpenMode === 'sidePanel') {
     _optionsData.value.tempOpenMode = '';
+    isSidePanel.value = true;
     saveOptions();
     return;
   }
