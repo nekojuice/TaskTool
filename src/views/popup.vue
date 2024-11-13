@@ -26,9 +26,24 @@
       <Button v-tooltip="'在側邊欄開啟'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-bars" severity="secondary" outlined @click="openInSidePanel('/index.html')" />
       <div class="h-1rem w-2rem"></div>
       <Button
-        v-tooltip="'任務內容編輯器'"
+        v-tooltip="'任務清單'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-book"
+        severity="info"
+        :outlined="!showTaskListDrawer"
+        @click="[(showTaskListDrawer = !showTaskListDrawer), saveCache()]" />
+      <Button
+        v-tooltip="'固定顯示任務清單'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-thumbtack"
+        severity="info"
+        :outlined="!_showBlock.taskListBlockPin"
+        @click="[(_showBlock.taskListBlockPin = !_showBlock.taskListBlockPin), saveCache()]" />
+      <div class="h-1rem w-2rem"></div>
+      <Button
+        v-tooltip="'任務內容編輯器'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-pen-to-square"
         severity="info"
         :outlined="!_showBlock.taskEditor"
         @click="[toggleTaskBlock(), saveCache()]" />
@@ -173,7 +188,7 @@
     <ConfirmDialog group="deleteTask"></ConfirmDialog>
     <div class="scrollTarget">
       <div class="custom-grid">
-        <div class="custom-col-8">
+        <div v-if="_showBlock.taskListBlockPin" class="custom-col-8">
           <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
             <Column rowReorder class="pr-0" style="width: 36px; max-width: 36px" />
             <Column v-if="_showBlock.debugBlock" header="#" class="w-1 white-space-nowrap">
@@ -200,7 +215,7 @@
             </Column>
           </DataTable>
         </div>
-        <div v-if="_tasks.filter((t) => t.id == _data.id).length" class="custom-col-4" style="min-width: 180px">
+        <div v-if="_tasks.filter((t) => t.id == _data.id).length" :class="_showBlock.taskListBlockPin ? 'custom-col-4' : 'col-12'" style="min-width: 180px">
           <Tag severity="warn">
             <h3 class="font-bold" style="max-width: 178px">{{ _data.taskHeader }}</h3>
           </Tag>
@@ -354,6 +369,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import RadioButton from 'primevue/radiobutton';
+import Drawer from 'primevue/drawer';
 
 import InputTextDate from '@/components/InputTextDate.vue';
 import Timeline from '@/components/Timeline.vue';
@@ -392,11 +408,13 @@ const _showBlock = ref({
   taskEditor: 0,
   timeEditor: false,
   debugBlock: false,
-  deleteMode: false
+  deleteMode: false,
+  taskListBlockPin: false
 });
 const _optionsData = ref({ defaultOpenMode: 'popup', tempOpenMode: '', restTime: { workOn: 510, lunch: [710, 800], workOff: 1080 } });
 const defaultOpenModeMessage = ref('');
 const showOptions = ref(false);
+const showTaskListDrawer = ref(false);
 const periodEditorData = ref({
   showPeriodEditor: false,
   date: '',
