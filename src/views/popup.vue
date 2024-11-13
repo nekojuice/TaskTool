@@ -166,8 +166,8 @@
           <div class="flex flex-row mt-2">
             <PeriodInput
               v-model="_period"
-              :min="_optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
-              :max="_optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440" />
+              :min="_optionsData.restTime && _optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
+              :max="_optionsData.restTime && _optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440" />
           </div>
         </div>
       </div>
@@ -178,8 +178,8 @@
           v-model="_period"
           range
           :step="1"
-          :min="_optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
-          :max="_optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
+          :min="_optionsData.restTime && _optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
+          :max="_optionsData.restTime && _optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
           pt:startHandler:style="margin-left: -10px; margin-top: -23px; z-index: 10; border-radius: 0; background: transparent; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 10px solid gray;"
           pt:endHandler:style="margin-left: 0px; margin-top: -23px; z-index: 10; z-index: 10; border-radius: 0; background: transparent; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid gray;"
           pt:range:style="height: 10px; margin-top: -3px; background: repeating-linear-gradient(45deg, rgba(249, 115, 22, 1),  rgba(249, 115, 22, 0.5) 4px, transparent 4px, transparent 7px);"
@@ -190,8 +190,8 @@
           :date="_time.date"
           :workTime="selectedDateTimeline?.periods"
           :restTime="applyOptionToRestTime()"
-          :displayStartTime="_optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
-          :displayEndTime="_optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
+          :displayStartTime="_optionsData.restTime && _optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
+          :displayEndTime="_optionsData.restTime && _optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
           :showScale="true"
           style="margin-top: -30px"
           @periodEditorData="(data) => periodEditorLoadPeriod(data)" />
@@ -243,8 +243,8 @@
                   :date="day.date"
                   :workTime="day.periods"
                   :restTime="applyOptionToRestTime()"
-                  :displayStartTime="_optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
-                  :displayEndTime="_optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
+                  :displayStartTime="_optionsData.restTime && _optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
+                  :displayEndTime="_optionsData.restTime && _optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
                   :showDateAndSum="true"
                   :deleteMode="_showBlock.deleteMode"
                   @click="[(_time.date = day.date), (_showBlock.timeEditor = 1)]"
@@ -371,8 +371,8 @@
       <Timeline
         class="p-0 mt-2"
         :restTime="applyOptionToRestTime()"
-        :displayStartTime="_optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
-        :displayEndTime="_optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
+        :displayStartTime="_optionsData.restTime && _optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
+        :displayEndTime="_optionsData.restTime && _optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
         :showScale="true" />
       <h3 class="font-bold mt-4">其他</h3>
       <div class="flex flex-row">
@@ -430,7 +430,7 @@ import Timeline from '@/components/Timeline.vue';
 import TimeInput from '@/components/TimeInput.vue';
 import PeriodInput from '@/components/PeriodInput.vue';
 
-import { convertDateToString, isValidPage, sendTabMessage, setStorage, getStorage, deleteStorage } from '../service/commonService';
+import { convertDateToString, isValidPage, sendTabMessage, setStorage, getStorage, deleteStorage, deepMerge } from '../service/commonService';
 
 onBeforeMount(() => {
   loadOptions();
@@ -553,7 +553,7 @@ const saveOptions = () => {
 };
 
 const loadOptions = async () => {
-  _optionsData.value = (await getStorage('optionsData')) || _optionsData.value;
+  _optionsData.value = deepMerge(_optionsData.value, await getStorage('optionsData'));
   executeDefaultOpenMode();
 };
 const executeDefaultOpenMode = () => {
