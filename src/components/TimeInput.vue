@@ -8,7 +8,7 @@
       @keydown="handleHourKeydown"
       class="w-2rem"
       :style="inputStyle"
-      @change="emit('change')" />
+      @change="inputUpdateTickData()" />
     :
     <input
       type="number"
@@ -18,7 +18,7 @@
       @keydown="handleMinuteKeydown"
       class="w-2rem"
       :style="inputStyle"
-      @change="emit('change')" />
+      @change="inputUpdateTickData()" />
   </span>
 </template>
 
@@ -40,19 +40,21 @@ const emit = defineEmits(['change']);
 
 const inputUpdateTickData = () => {
   const result = inputHour.value * 60 + inputMinute.value;
-  if (result > 1440) {
-    inputHour.value = 24;
-    inputMinute.value = 0;
-    tickData.value = 1440;
-  } else if (result < props.min) {
+  if (result < props.min) {
     tickData.value = props.min;
     tickDataUpdateInput();
   } else if (props.max < result) {
     tickData.value = props.max;
     tickDataUpdateInput();
+  } else if (result > 1440) {
+    inputHour.value = 24;
+    inputMinute.value = 0;
+    tickData.value = 1440;
   } else {
     tickData.value = result;
   }
+
+  emit('change');
 };
 
 watch(tickData, () => tickDataUpdateInput());
@@ -72,7 +74,6 @@ const validateHourInput = (event) => {
   } else {
     inputHour.value = inputHour.value > 24 ? 24 : 0;
   }
-  inputUpdateTickData();
 };
 
 const validateMinuteInput = (event) => {
@@ -85,7 +86,6 @@ const validateMinuteInput = (event) => {
   } else {
     inputMinute.value = inputMinute.value > 59 ? 59 : 0;
   }
-  inputUpdateTickData();
 };
 
 const adjustHourByWheel = (event) => {
@@ -95,7 +95,6 @@ const adjustHourByWheel = (event) => {
     inputHour.value--;
   }
   inputUpdateTickData();
-  emit('change');
 };
 
 const adjustMinuteByWheel = (event) => {
@@ -117,17 +116,16 @@ const adjustMinuteByWheel = (event) => {
     }
   }
   inputUpdateTickData();
-  emit('change');
 };
 
 const handleHourKeydown = (event) => {
   if (event.key === 'ArrowUp' && inputHour.value < 24) {
     inputHour.value++;
+    inputUpdateTickData();
   } else if (event.key === 'ArrowDown' && inputHour.value > 0) {
     inputHour.value--;
+    inputUpdateTickData();
   }
-  inputUpdateTickData();
-  emit('change');
 };
 
 const handleMinuteKeydown = (event) => {
@@ -138,6 +136,7 @@ const handleMinuteKeydown = (event) => {
     } else {
       inputMinute.value++;
     }
+    inputUpdateTickData();
   } else if (event.key === 'ArrowDown') {
     if (inputHour.value === 0 && inputMinute.value === 0) return;
 
@@ -147,9 +146,8 @@ const handleMinuteKeydown = (event) => {
     } else {
       inputMinute.value--;
     }
+    inputUpdateTickData();
   }
-  inputUpdateTickData();
-  emit('change');
 };
 
 const inputStyle = 'border-radius: unset; border: none; border-bottom: 1px solid black; text-align: center; padding-left: 0; padding-right: 0;';
