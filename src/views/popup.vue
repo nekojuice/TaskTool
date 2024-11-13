@@ -78,7 +78,14 @@
         :outlined="!_showBlock.deleteMode"
         @click="[(_showBlock.deleteMode = !_showBlock.deleteMode), saveCache()]" />
       <div class="h-1rem w-2rem"></div>
-      <Button v-tooltip="'選項'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-cog" severity="secondary" outlined @click="showOptions = !showOptions" />
+      <Button
+        v-tooltip="'選項'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-cog"
+        severity="secondary"
+        :outlined="true"
+        :style="showOptions ? 'background-color: lightgray;' : ''"
+        @click="showOptions = !showOptions" />
     </div>
     <!-- debugblock -->
     <div v-if="_showBlock.debugBlock" class="w-2rem flex justify-content-center align-content-end flex-wrap">
@@ -382,7 +389,8 @@
           class="h-2rem w-2rem flex"
           icon="pi pi-ellipsis-v"
           severity="secondary"
-          :outlined="!_showBlock.debugBlock"
+          :outlined="true"
+          :style="_showBlock.debugBlock ? 'background-color: lightgray;' : ''"
           @click="_showBlock.debugBlock = !_showBlock.debugBlock" />
         <div class="h-2rem w-1rem flex"></div>
         <FileUpload
