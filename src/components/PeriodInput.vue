@@ -20,7 +20,7 @@ const emit = defineEmits(['change']);
 
 const timeData = computed({
   get() {
-    if (!model.value || !Array.isArray(model.value) || model.value.length !== 2) {
+    if (!model.value || !Array.isArray(model.value) || model.value.length < 2) {
       model.value = [0, 0];
       return [0, 0];
     }

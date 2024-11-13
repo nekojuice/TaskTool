@@ -86,6 +86,7 @@
       <Button v-tooltip="'DEBUG, current data'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="D" outlined @click="console.log('data', _data)" />
       <Button v-tooltip="'DEBUG, current data all times'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="T" outlined @click="console.log('time', _time)" />
       <Button v-tooltip="'DEBUG, current period'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="P" outlined @click="console.log('period', _period)" />
+      <Button v-tooltip="'DEBUG, current optionsData'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="O" outlined @click="console.log('optionsData', _optionsData)" />
       <Button v-tooltip="'⚠️刪除所有資料'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-trash" severity="danger" outlined @click="deleteAllData()" />
     </div>
   </div>
@@ -691,7 +692,7 @@ const saveTime = () => {
   const taskIndex = _tasks.value.findIndex((t) => t.id === _data.value.id);
   const timeIndex = _data.value.times.findIndex((t) => t.date === _time.value.date);
 
-  const updatedPeriod = removeLaunchPeriod([..._period.value]);
+  const updatedPeriod = removeLunchPeriod([..._period.value]);
   if (timeIndex === -1) {
     _data.value.times.push({ ..._time.value, periods: updatedPeriod });
   } else {
@@ -752,7 +753,7 @@ function processWorkPeriods(workPeriods) {
   return result;
 }
 
-const removeLaunchPeriod = ([start, end]) => {
+const removeLunchPeriod = ([start, end]) => {
   const lunchBreakStart = 710;
   const lunchBreakEnd = 800;
   const result = [];
