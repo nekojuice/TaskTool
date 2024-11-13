@@ -29,6 +29,10 @@ onBeforeMount(() => {
   tickDataUpdateInput();
 });
 
+const props = defineProps({
+  min: { type: Number, default: 0 },
+  max: { type: Number, default: 1440 }
+});
 const tickData = defineModel();
 const inputHour = ref(0);
 const inputMinute = ref(0);
@@ -40,6 +44,12 @@ const inputUpdateTickData = () => {
     inputHour.value = 24;
     inputMinute.value = 0;
     tickData.value = 1440;
+  } else if (result < props.min) {
+    tickData.value = props.min;
+    tickDataUpdateInput();
+  } else if (props.max < result) {
+    tickData.value = props.max;
+    tickDataUpdateInput();
   } else {
     tickData.value = result;
   }

@@ -1,14 +1,19 @@
 <template>
   <span>
-    <TimeInput v-model="timeData[0]" @change="switchTime(), emit('change')" />
+    <TimeInput v-model="timeData[0]" @change="switchTime(), emit('change')" :min="props.min" :max="props.max" />
     ~
-    <TimeInput v-model="timeData[1]" @change="switchTime(), emit('change')" />
+    <TimeInput v-model="timeData[1]" @change="switchTime(), emit('change')" :min="props.min" :max="props.max" />
   </span>
 </template>
 <script setup>
 import { computed, onMounted, watch } from 'vue';
 
 import TimeInput from '@/components/TimeInput.vue';
+
+const props = defineProps({
+  min: { type: Number, default: 0 },
+  max: { type: Number, default: 1440 }
+});
 
 const model = defineModel();
 const emit = defineEmits(['change']);

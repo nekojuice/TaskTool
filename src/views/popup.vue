@@ -164,7 +164,10 @@
               size="small" />
           </div>
           <div class="flex flex-row mt-2">
-            <PeriodInput v-model="_period" />
+            <PeriodInput
+              v-model="_period"
+              :min="_optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
+              :max="_optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440" />
           </div>
         </div>
       </div>
