@@ -329,6 +329,20 @@
           <label for="defaultOpenMode.newWindow_maximized">新視窗(視窗最大化)</label>
         </div>
       </div>
+      <h3>休息時段 <span class="text-sm" style="color: black"></span></h3>
+      <div>
+        <span>上班&nbsp;</span>
+        <TimeInput v-model="_optionsData.restTime.workOn" />
+      </div>
+      <div>
+        <span>午休&nbsp;</span>
+        <PeriodInput v-model="_optionsData.restTime.lunch" />
+      </div>
+      <div>
+        <span>下班&nbsp;</span>
+        <TimeInput v-model="_optionsData.restTime.workOff" />
+      </div>
+      <Timeline class="p-0 mt-2" :restTime="[[0, _optionsData.restTime.workOn], _optionsData.restTime.lunch, [_optionsData.restTime.workOff, 1440]]" :showScale="false" />
     </Dialog>
   </div>
 </template>
@@ -351,6 +365,8 @@ import RadioButton from 'primevue/radiobutton';
 
 import InputTextDate from '@/components/InputTextDate.vue';
 import Timeline from '@/components/Timeline.vue';
+import TimeInput from '@/components/TimeInput.vue';
+import PeriodInput from '@/components/PeriodInput.vue';
 
 import { convertDateToString, isValidPage, sendTabMessage, setStorage, getStorage, deleteStorage } from '../service/commonService';
 
@@ -386,7 +402,7 @@ const _showBlock = ref({
   debugBlock: false,
   deleteMode: false
 });
-const _optionsData = ref({ defaultOpenMode: 'popup', tempOpenMode: '' });
+const _optionsData = ref({ defaultOpenMode: 'popup', tempOpenMode: '', restTime: {} });
 const defaultOpenModeMessage = ref('');
 const showOptions = ref(false);
 const periodEditorData = ref({

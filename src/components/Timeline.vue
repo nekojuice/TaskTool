@@ -20,7 +20,7 @@
         @dblclick="editTimePeriod($event, index)"></div>
       <div
         v-for="period in props.restTime"
-        v-tooltip.bottom="`午休${Math.floor(period[0] / 60)}:${period[0] % 60}-${Math.floor(period[1] / 60)}:${period[1] % 60}`"
+        v-tooltip.bottom="`休息${Math.floor(period[0] / 60)}:${period[0] % 60}-${Math.floor(period[1] / 60)}:${period[1] % 60}`"
         :key="index"
         class="time-block"
         :style="getPeriodStyle(period, '#757575')"></div>
