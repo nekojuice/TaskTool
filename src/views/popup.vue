@@ -242,6 +242,33 @@
         </div>
       </div>
     </div>
+    <Drawer v-model:visible="showTaskListDrawer" position="right" header="任務清單">
+      <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
+        <Column rowReorder class="pr-0" style="width: 36px; max-width: 36px" />
+        <Column v-if="_showBlock.debugBlock" header="#" class="w-1 white-space-nowrap">
+          <template #body="slotProps">
+            {{ slotProps.data.id }}
+          </template>
+        </Column>
+        <Column field="taskHeader" header="標題" class="w-10">
+          <template #body="slotProps">
+            <Button @click="[taskListSelect(slotProps.data), saveCache(), (showTaskListDrawer = false)]" :severity="taskListSelectedColor(slotProps.data.id)">
+              {{ slotProps.data.taskHeader }}
+            </Button>
+          </template>
+        </Column>
+        <Column field="effort" header="effort" class="w-2">
+          <template #body="slotProps">
+            {{ calEffort(slotProps.data.times) }}
+          </template>
+        </Column>
+        <Column v-if="_showBlock.deleteMode" field="delete" header="刪除">
+          <template #body="slotProps">
+            <Button icon="pi pi-trash" severity="danger" size="small" raised @click="deleteTask(slotProps.data.id)" />
+          </template>
+        </Column>
+      </DataTable>
+    </Drawer>
     <!-- period editor -->
     <Dialog v-model:visible="periodEditorData.showPeriodEditor" modal header="更改時間軸片段" :style="{ width: '25rem' }">
       <div>日期: {{ periodEditorData.date }} <Tag class="h-1rem" severity="info" :value="new Intl.DateTimeFormat('zh-TW', { weekday: 'short' }).format(new Date(periodEditorData.date))"></Tag></div>
