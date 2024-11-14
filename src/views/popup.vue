@@ -197,7 +197,7 @@
           class="p-0"
           :date="_time.date"
           :workTime="selectedDateTimeline?.periods"
-          :restTime="applyOptionToRestTime()"
+          :restTime="getRestPeriods()"
           :displayStartTime="_optionsData.restTime && _optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
           :displayEndTime="_optionsData.restTime && _optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
           :showScale="true"
@@ -250,7 +250,7 @@
                   v-for="day in week.days"
                   :date="day.date"
                   :workTime="day.periods"
-                  :restTime="applyOptionToRestTime()"
+                  :restTime="getRestPeriods()"
                   :displayStartTime="_optionsData.restTime && _optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
                   :displayEndTime="_optionsData.restTime && _optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
                   :showDateAndSum="true"
@@ -308,7 +308,8 @@
     <!-- options -->
     <Dialog v-model:visible="showOptions" header="選項" :style="{ width: '25rem' }" :modal="true" :draggable="false">
       <h3 class="font-bold">
-        開啟方式 <span class="text-sm" style="color: red">{{ defaultOpenModeMessage }}</span>
+        開啟方式 <span v-tooltip.top="'按下擴充功能icon時的預設動作'" class="pi pi-info-circle text-sm" style="color: lightblue"></span
+        ><span class="text-sm" style="color: red">{{ defaultOpenModeMessage }}</span>
       </h3>
       <div class="flex flex-wrap gap-4">
         <div class="flex items-center gap-2">
@@ -358,7 +359,9 @@
           <label for="defaultOpenMode.newWindow_maximized">新視窗(視窗最大化)</label>
         </div>
       </div>
-      <h3 class="font-bold mt-4">固定休息時段 <span class="text-sm" style="color: black"></span></h3>
+      <h3 class="font-bold mt-4">
+        固定休息時段 <span v-tooltip.top="'重疊在灰色區段內時段會被刪除\n- 僅套用在新登記資料\n- 不會影響舊資料'" class="pi pi-info-circle text-sm" style="color: lightblue"></span>
+      </h3>
       <div>
         <ToggleSwitch v-model="_optionsData.restTime.enableWorkOn" @change="saveOptions()" />
         <span>上班&nbsp;</span>
@@ -378,7 +381,7 @@
       </div>
       <Timeline
         class="p-0 mt-2"
-        :restTime="applyOptionToRestTime()"
+        :restTime="getRestPeriods()"
         :displayStartTime="_optionsData.restTime && _optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
         :displayEndTime="_optionsData.restTime && _optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
         :showScale="true" />
@@ -700,7 +703,7 @@ const saveTime = () => {
   const taskIndex = _tasks.value.findIndex((t) => t.id === _data.value.id);
   const timeIndex = _data.value.times.findIndex((t) => t.date === _time.value.date);
 
-  const updatedPeriod = removeLunchPeriod([..._period.value]);
+  const updatedPeriod = removeRestPeriods([..._period.value]);
   if (timeIndex === -1) {
     _data.value.times.push({ ..._time.value, periods: updatedPeriod });
   } else {
@@ -721,11 +724,22 @@ const saveTime = () => {
   saveCache();
 };
 
-function processWorkPeriods(workPeriods) {
-  const lunchBreakStart = 710;
-  const lunchBreakEnd = 800;
+const getRestPeriods = () => {
+  const resultRestTimeArray = [];
+  if (_optionsData.value.restTime?.enableWorkOn === true) {
+    resultRestTimeArray.push([0, _optionsData.value.restTime?.workOn]);
+  }
+  if (_optionsData.value.restTime?.enableLunch === true) {
+    resultRestTimeArray.push(_optionsData.value.restTime?.lunch);
+  }
+  if (_optionsData.value.restTime?.enableWorkOff === true) {
+    resultRestTimeArray.push([_optionsData.value.restTime?.workOff, 1440]);
+  }
 
-  // Step 1: Sort periods by starting time
+  return resultRestTimeArray;
+};
+
+const processWorkPeriods = (workPeriods) => {
   workPeriods.sort((a, b) => a[0] - b[0]);
 
   const mergedPeriods = [];
@@ -735,7 +749,6 @@ function processWorkPeriods(workPeriods) {
     const [currentStart, currentEnd] = currentPeriod;
     const [nextStart, nextEnd] = workPeriods[i];
 
-    // Step 2: Merge overlapping periods
     if (currentEnd >= nextStart) {
       currentPeriod = [currentStart, Math.max(currentEnd, nextEnd)];
     } else {
@@ -745,37 +758,33 @@ function processWorkPeriods(workPeriods) {
   }
   mergedPeriods.push(currentPeriod);
 
-  // Step 3: Remove lunch break time (710 to 800)
-  const result = [];
-  mergedPeriods.forEach(([start, end]) => {
-    if (start < lunchBreakStart && end > lunchBreakEnd) {
-      result.push([start, lunchBreakStart], [lunchBreakEnd, end]);
-    } else if (end > lunchBreakStart && start < lunchBreakEnd) {
-      if (start < lunchBreakStart) result.push([start, lunchBreakStart]);
-      if (end > lunchBreakEnd) result.push([lunchBreakEnd, end]);
-    } else {
-      result.push([start, end]);
-    }
+  const result = mergedPeriods.flatMap((period) => removeRestPeriods(period));
+
+  return result;
+};
+
+const removeRestPeriods = ([start, end]) => {
+  const restPeriods = getRestPeriods();
+  let periods = [[start, end]];
+
+  restPeriods.forEach(([restStart, restEnd]) => {
+    periods = periods.flatMap(([s, e]) => {
+      const result = [];
+
+      if (s < restStart && e > restEnd) {
+        result.push([s, restStart], [restEnd, e]);
+      } else if (e > restStart && s < restEnd) {
+        if (s < restStart) result.push([s, restStart]);
+        if (e > restEnd) result.push([restEnd, e]);
+      } else {
+        result.push([s, e]);
+      }
+
+      return result;
+    });
   });
 
-  return result;
-}
-
-const removeLunchPeriod = ([start, end]) => {
-  const lunchBreakStart = 710;
-  const lunchBreakEnd = 800;
-  const result = [];
-
-  if (start < lunchBreakStart && end > lunchBreakEnd) {
-    result.push([start, lunchBreakStart], [lunchBreakEnd, end]);
-  } else if (end > lunchBreakStart && start < lunchBreakEnd) {
-    if (start < lunchBreakStart) result.push([start, lunchBreakStart]);
-    if (end > lunchBreakEnd) result.push([lunchBreakEnd, end]);
-  } else {
-    result.push([start, end]);
-  }
-
-  return result;
+  return periods;
 };
 
 const onRowReorder = (event) => {
@@ -1127,21 +1136,6 @@ const checkUnsaved = computed(() => {
     return false;
   }
 });
-
-const applyOptionToRestTime = () => {
-  const resultRestTimeArray = [];
-  if (_optionsData.value.restTime?.enableWorkOn === true) {
-    resultRestTimeArray.push([0, _optionsData.value.restTime?.workOn]);
-  }
-  if (_optionsData.value.restTime?.enableLunch === true) {
-    resultRestTimeArray.push(_optionsData.value.restTime?.lunch);
-  }
-  if (_optionsData.value.restTime?.enableWorkOff === true) {
-    resultRestTimeArray.push([_optionsData.value.restTime?.workOff, 1440]);
-  }
-
-  return resultRestTimeArray;
-};
 </script>
 
 <style scoped>
