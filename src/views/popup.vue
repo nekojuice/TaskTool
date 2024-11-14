@@ -293,7 +293,7 @@
       </DataTable>
     </Drawer>
     <!-- period editor -->
-    <Dialog v-model:visible="periodEditorData.showPeriodEditor" modal header="更改時間軸片段" :style="{ width: '25rem' }">
+    <Dialog v-model:visible="periodEditorData.showPeriodEditor" modal header="更改時間軸片段" :style="{ width: '25rem' }" @keydown.native="handleDialogKeydown">
       <div>日期: {{ periodEditorData.date }} <Tag class="h-1rem" severity="info" :value="new Intl.DateTimeFormat('zh-TW', { weekday: 'short' }).format(new Date(periodEditorData.date))"></Tag></div>
       <div class="w-full">
         <PeriodInput v-model="periodEditorData.period" />
@@ -1105,6 +1105,10 @@ const handleDialogKeydown = (event) => {
   if (event.key === 'Enter') {
     handleSave();
   } else if (event.key === 'Delete') {
+    if (event.target.tagName === 'INPUT') {
+      return;
+    }
+
     handleDelete();
   }
 };
