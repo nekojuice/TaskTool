@@ -558,16 +558,6 @@ const openInSidePanel = async () => {
 
   _optionsData.value.tempOpenMode = 'sidePanel';
   await saveOptions();
-
-  if (getBrowserType() == 'Chrome') {
-    document.body.style.width = '';
-    document.body.style.height = '';
-    document.body.style.overflow = '';
-    const app = document.getElementById('app');
-    app.style.width = '100%';
-    app.style.height = '100vh';
-  }
-
   await chrome.sidePanel.open({ tabId: tabs[0].id, windowId: currentWindow.id });
 
   if (getBrowserType() == 'Chrome') {
