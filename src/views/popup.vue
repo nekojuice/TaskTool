@@ -308,7 +308,7 @@
     <!-- options -->
     <Dialog v-model:visible="showOptions" header="選項" :style="{ width: '25rem' }" :modal="true" :draggable="false">
       <h3 class="font-bold">
-        開啟方式 <span v-tooltip.top="'按下擴充功能icon時的預設動作'" class="pi pi-info-circle text-sm" style="color: lightblue"></span
+        開啟方式 <span v-tooltip.top="'按下擴充功能icon時的預設動作'" class="pi pi-info-circle text-sm align-self-center" style="color: lightblue"></span
         ><span class="text-sm" style="color: red">{{ defaultOpenModeMessage }}</span>
       </h3>
       <div class="flex flex-wrap gap-4">
@@ -360,21 +360,24 @@
         </div>
       </div>
       <h3 class="font-bold mt-4">
-        固定休息時段 <span v-tooltip.top="'重疊在灰色區段內時段會被刪除\n- 僅套用在新登記資料\n- 不會影響舊資料'" class="pi pi-info-circle text-sm" style="color: lightblue"></span>
+        固定休息時段 <span v-tooltip.top="'重疊在灰色區段內時段會被刪除\n- 僅套用在新登記資料\n- 不會影響舊資料'" class="pi pi-info-circle text-sm align-self-center" style="color: lightblue"></span>
       </h3>
-      <div>
+      <div class="flex align-content-center mb-1">
         <ToggleSwitch v-model="_optionsData.restTime.enableWorkOn" @change="saveOptions()" />
         <span>上班&nbsp;</span>
         <TimeInput v-model="_optionsData.restTime.workOn" @change="saveOptions()" />
+        <span v-tooltip.top="'此時間以前設為灰色區塊'" class="pi pi-info-circle text-sm align-self-center" style="color: lightblue"></span>
         <Checkbox class="ml-2" id="hideNotWorking" v-model="_optionsData.restTime.hideNotWorking" binary @change="saveOptions()" />
         <label for="hideNotWorking">隱藏非上班時段</label>
+        <span v-tooltip.top="'時間軸將隱藏非上班時段'" class="pi pi-info-circle text-sm align-self-center" style="color: lightblue"></span>
       </div>
-      <div>
+      <div class="flex align-content-center mb-1">
         <ToggleSwitch v-model="_optionsData.restTime.enableWorkOff" @change="saveOptions()" />
         <span>下班&nbsp;</span>
         <TimeInput v-model="_optionsData.restTime.workOff" @change="saveOptions()" />
+        <span v-tooltip.top="'此時間以後設為灰色區塊'" class="pi pi-info-circle text-sm align-self-center" style="color: lightblue"></span>
       </div>
-      <div>
+      <div class="flex align-content-center">
         <ToggleSwitch v-model="_optionsData.restTime.enableLunch" @change="saveOptions()" />
         <span>午休&nbsp;</span>
         <PeriodInput v-model="_optionsData.restTime.lunch" @change="saveOptions()" />
