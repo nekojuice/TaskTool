@@ -445,7 +445,7 @@ import Timeline from '@/components/Timeline.vue';
 import TimeInput from '@/components/TimeInput.vue';
 import PeriodInput from '@/components/PeriodInput.vue';
 
-import { convertDateToString, isValidPage, sendTabMessage, setStorage, getStorage, deleteStorage, deepMerge } from '../service/commonService';
+import { convertDateToString, isValidPage, sendTabMessage, setStorage, getStorage, deleteStorage, deepMerge, getBrowserType } from '../service/commonService';
 
 onBeforeMount(() => {
   loadOptions();
@@ -557,13 +557,28 @@ const openInSidePanel = async () => {
   }
 
   _optionsData.value.tempOpenMode = 'sidePanel';
-  saveOptions();
+  await saveOptions();
+
+  if (getBrowserType() == 'Chrome') {
+    document.body.style.width = '';
+    document.body.style.height = '';
+    document.body.style.overflow = '';
+    const app = document.getElementById('app');
+    app.style.width = '100%';
+    app.style.height = '100vh';
+  }
+
   await chrome.sidePanel.open({ tabId: tabs[0].id, windowId: currentWindow.id });
-  _optionsData.value.tempOpenMode = '';
-  saveOptions();
+
+  if (getBrowserType() == 'Chrome') {
+    window.close();
+  } else {
+    _optionsData.value.tempOpenMode = '';
+    saveOptions();
+  }
 };
 
-const saveOptions = () => {
+const saveOptions = async () => {
   setStorage({ optionsData: _optionsData.value });
 };
 
@@ -585,10 +600,10 @@ const executeDefaultOpenMode = () => {
     return;
   }
   if (_optionsData.value.defaultOpenMode === 'popup') {
-    const app = document.getElementById('app');
     document.body.style.width = '800px';
     document.body.style.height = '600px';
     document.body.style.overflow = 'hidden';
+    const app = document.getElementById('app');
     app.style.width = '800px';
     app.style.height = '600px';
     return;

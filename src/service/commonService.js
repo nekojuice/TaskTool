@@ -273,6 +273,28 @@ class CommonService {
    * @returns
    */
   delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  /**
+   * 取得瀏覽器類別
+   * @returns
+   */
+  getBrowserType = () => {
+    const userAgent = navigator.userAgent;
+
+    if (userAgent.includes('Chrome') && !userAgent.includes('Edg') && !userAgent.includes('OPR')) {
+      return 'Chrome';
+    } else if (userAgent.includes('Edg')) {
+      return 'Edge';
+    } else if (userAgent.includes('Firefox')) {
+      return 'Firefox';
+    } else if (userAgent.includes('OPR') || userAgent.includes('Opera')) {
+      return 'Opera';
+    } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+      return 'Safari';
+    } else {
+      return 'Unknown';
+    }
+  };
 }
 
 const commonService = new CommonService();
@@ -287,7 +309,8 @@ const setStorage = commonService.setStorage;
 const getStorage = commonService.getStorage;
 const deleteStorage = commonService.deleteStorage;
 const delay = commonService.delay;
+const getBrowserType = commonService.getBrowserType;
 
 export default new CommonService();
 
-export { isValidDateString, convertDateToString, convertStringToDate, deepMerge, isValidPage, deepCopy, sendTabMessage, setStorage, getStorage, deleteStorage, delay };
+export { isValidDateString, convertDateToString, convertStringToDate, deepMerge, isValidPage, deepCopy, sendTabMessage, setStorage, getStorage, deleteStorage, delay, getBrowserType };
