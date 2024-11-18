@@ -2,37 +2,6 @@
   <div class="sidenav p-0 flex justify-content-center flex-wrap">
     <div class="w-2rem flex justify-content-center align-content-start flex-wrap">
       <Button
-        v-tooltip="'在瀏覽器新分頁開啟'"
-        class="h-2rem w-2rem flex align-items-center justify-content-center"
-        icon="pi pi-tag"
-        severity="secondary"
-        outlined
-        @click="
-          _optionsData.hasExecutedOpenMode = true;
-          saveOptions();
-          openInNewTab('/index.html');
-        " />
-      <Button
-        v-tooltip="'在瀏覽器新視窗開啟'"
-        class="h-2rem w-2rem flex align-items-center justify-content-center"
-        icon="pi pi-window-maximize"
-        severity="secondary"
-        outlined
-        @click="
-          _optionsData.hasExecutedOpenMode = true;
-          saveOptions();
-          openInNewWindow('/index.html');
-        " />
-      <Button
-        v-tooltip="'在側邊欄開啟'"
-        class="h-2rem w-2rem flex align-items-center justify-content-center"
-        icon="pi pi-bars"
-        severity="secondary"
-        outlined
-        @click="openInSidePanel('/index.html')"
-        :style="isSidePanel ? 'background-color: lightgray;' : ''" />
-      <div class="h-1rem w-2rem"></div>
-      <Button
         v-tooltip="'任務清單'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-book"
@@ -86,6 +55,37 @@
         :outlined="true"
         :style="showOptions ? 'background-color: lightgray;' : ''"
         @click="showOptions = !showOptions" />
+      <Button
+        v-tooltip="'在瀏覽器新分頁開啟'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-tag"
+        severity="secondary"
+        outlined
+        @click="
+          _optionsData.hasExecutedOpenMode = true;
+          saveOptions();
+          openInNewTab('/index.html');
+        " />
+      <Button
+        v-tooltip="'在瀏覽器新視窗開啟'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-window-maximize"
+        severity="secondary"
+        outlined
+        @click="
+          _optionsData.hasExecutedOpenMode = true;
+          saveOptions();
+          openInNewWindow('/index.html');
+        " />
+      <Button
+        v-tooltip="'在側邊欄開啟'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-bars"
+        severity="secondary"
+        outlined
+        @click="openInSidePanel('/index.html')"
+        :style="isSidePanel ? 'background-color: lightgray;' : ''" />
+      <div class="h-1rem w-2rem"></div>
     </div>
     <!-- debugblock -->
     <div v-if="_showBlock.debugBlock" class="w-2rem flex justify-content-center align-content-end flex-wrap">
