@@ -244,7 +244,7 @@
           <span v-if="!sortedTimelines.length">此任務沒有時數紀錄</span>
           <div class="grouped-timeline">
             <div v-for="week in groupedTimelines" :key="week.weekKey" class="mt-2">
-              <Tag :value="week.formattedWeek"></Tag>
+              <Tag :value="week.formattedWeek + ` [${sumWeekWorkTime(week)}]`"></Tag>
               <div>
                 <Timeline
                   v-for="day in week.days"
@@ -932,6 +932,20 @@ const groupedTimelines = computed(() => {
     days: value
   }));
 });
+const sumWeekWorkTime = (week) => {
+  let totalMinutes = 0;
+
+  week.days.forEach((day) => {
+    day.periods.forEach(([start, end]) => {
+      totalMinutes += end - start;
+    });
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
 
 // 下載
 const downloadOnClick = () => {
