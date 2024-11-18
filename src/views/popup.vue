@@ -149,7 +149,7 @@
               :severity="_time.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }) ? 'secondary' : 'primary'"
               :disabled="_time.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' })" />
           </label>
-          <InputTextDate class="w-9rem" v-model="_time.date" title="資料日期" format="yyyyMMdd" separator="/" @change="saveCache()"></InputTextDate>
+          <SelectableInputCalendar v-model="_time.date" separator="/" class="flex" @update:modelValue="saveCache()" style="height: 2.5rem" />
         </div>
 
         <div class="flex flex-column">
@@ -440,7 +440,7 @@ import Drawer from 'primevue/drawer';
 import Checkbox from 'primevue/checkbox';
 import ToggleSwitch from 'primevue/toggleswitch';
 
-import InputTextDate from '@/components/InputTextDate.vue';
+import SelectableInputCalendar from '@/components/SelectableInputCalendar.vue';
 import Timeline from '@/components/Timeline.vue';
 import TimeInput from '@/components/TimeInput.vue';
 import PeriodInput from '@/components/PeriodInput.vue';
