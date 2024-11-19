@@ -55,6 +55,8 @@ const props = defineProps({
   disabled: { type: Boolean, default: false },
   // 是否可回傳空字串
   nullable: { type: Boolean, default: false },
+  // DatePicker 屬性傳遞
+  view: { type: String, default: 'date' },
 
   // 時間格式
   format: { type: String, default: 'yyyyMMdd' },

@@ -47,6 +47,8 @@
         :outlined="!_showBlock.deleteMode"
         @click="[(_showBlock.deleteMode = !_showBlock.deleteMode), saveCache()]" />
       <div class="h-1rem w-2rem"></div>
+      <Button v-tooltip="'月報'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-calendar" severity="help" :outlined="!showReport" @click="showReport = !showReport" />
+      <div class="h-1rem w-2rem"></div>
       <Button
         v-tooltip="'選項'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
@@ -98,9 +100,6 @@
     </div>
   </div>
   <div class="main">
-    <!-- report -->
-    <SelectableInputCalendar v-model="reportYearMonth" separator="/" format="yyyyMM" class="flex" style="height: 2.5rem" />
-    <Button @click="getMonthlyWorkPeriods(_tasks, reportYearMonth.split('/')[0], reportYearMonth.split('/')[1])"></Button>
     <!-- Task Info -->
     <Panel v-if="_showBlock.taskEditor" :pt:root:style="taskBlockColor()" pt:header:style="padding: 0;" pt:content:style="padding: 18px;">
       <h2 v-if="_showBlock.taskEditor == 2" class="w-full">新增任務</h2>
@@ -421,6 +420,28 @@
       <h3 class="font-bold mt-4">刪除設定檔</h3>
       <Button v-tooltip.focus="'重新開啟擴充功能以重新整理設定檔'" label="還原為預設值" icon="pi pi-trash" severity="danger" size="small" raised @click="deleteStorage(['optionsData'])" />
     </Dialog>
+
+    <!-- report -->
+    <Dialog v-model:visible="showReport" header="月報" :style="{ width: '90%', height: '90%' }" :modal="true" :draggable="false">
+      <div class="flex">
+        <SelectableInputCalendar v-model="reportYearMonth" separator="/" format="yyyyMM" class="flex mr-2" style="height: 2.5rem" />
+        <Button class="flex mr-2" label="自然月" @click="reportData = getMonthlyWorkPeriods(_tasks, +reportYearMonth.split('/')[0], +reportYearMonth.split('/')[1])"></Button>
+        <Button class="flex" label="工作週" @click="reportData = getMonthlyWorkPeriods2(_tasks, +reportYearMonth.split('/')[0], +reportYearMonth.split('/')[1])"></Button>
+      </div>
+
+      <div v-if="reportData">
+        <span v-if="!sortedTimelines.length">此任務沒有時數紀錄</span>
+        <Timeline
+          v-for="day in reportData"
+          :date="day.date"
+          :workTime="day.periods"
+          :restTime="getRestPeriods()"
+          :displayStartTime="_optionsData.restTime && _optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
+          :displayEndTime="_optionsData.restTime && _optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
+          :showDateAndSum="true"
+          :class="(day.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }) ? 'orangeBackground' : '')" />
+      </div>
+    </Dialog>
   </div>
 </template>
 <script setup>
@@ -492,6 +513,8 @@ const _optionsData = ref({
 const defaultOpenModeMessage = ref('');
 const showOptions = ref(false);
 const showTaskListDrawer = ref(false);
+const showReport = ref(false);
+const reportData = ref();
 const isSidePanel = ref(false);
 const periodEditorData = ref({
   showPeriodEditor: false,
@@ -1132,20 +1155,77 @@ const checkUnsaved = computed(() => {
 
 const reportYearMonth = ref(convertDateToString(new Date(), 'yyyyMM', { yearOffset: 0, separator: '/' }));
 
+// 以自然月檢視月報
 function getMonthlyWorkPeriods(tasks, year, month) {
-  const monthlyPeriods = [];
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const result = Array.from({ length: daysInMonth }, (_, i) => ({
+    date: `${year}/${String(month).padStart(2, '0')}/${String(i + 1).padStart(2, '0')}`,
+    periods: []
+  }));
 
   tasks.forEach((task) => {
-    task.times.forEach((time) => {
-      const [taskYear, taskMonth] = [time.date.split('/')[0], time.date.split('/')[1]];
-
+    task.times.forEach(({ date, periods }) => {
+      const [taskYear, taskMonth, taskDay] = date.split('/').map(Number);
       if (taskYear === year && taskMonth === month) {
-        monthlyPeriods.push(...time.periods);
+        result[taskDay - 1].periods.push(...periods);
       }
     });
   });
-  console.log(processWorkPeriods(monthlyPeriods));
-  // return processWorkPeriods(monthlyPeriods);
+
+  result.forEach((day) => {
+    if (day.periods.length > 0) {
+      day.periods = processWorkPeriods(day.periods);
+    }
+  });
+
+  return result;
+}
+
+// 以工作週檢視月報
+function getMonthlyWorkPeriods2(tasks, year, month) {
+  const firstDayOfMonth = new Date(year, month - 1, 1);
+  const lastDayOfMonth = new Date(year, month, 0);
+  const startOfMonthWeek = new Date(firstDayOfMonth);
+  startOfMonthWeek.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay() + 1);
+  const endOfMonthWeek = new Date(lastDayOfMonth);
+  endOfMonthWeek.setDate(lastDayOfMonth.getDate() + (7 - lastDayOfMonth.getDay()));
+
+  const result = [];
+  let currentWeekStart = new Date(startOfMonthWeek);
+
+  while (currentWeekStart <= endOfMonthWeek) {
+    const currentWeekEnd = new Date(currentWeekStart);
+    currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+    const weekThursday = new Date(currentWeekStart);
+    weekThursday.setDate(currentWeekStart.getDate() + 3);
+
+    if (weekThursday.getMonth() + 1 === month) {
+      for (let i = 0; i < 7; i++) {
+        const currentDate = new Date(currentWeekStart);
+        currentDate.setDate(currentWeekStart.getDate() + i);
+        const dateStr = `${currentDate.getFullYear()}/${String(currentDate.getMonth() + 1).padStart(2, '0')}/${String(currentDate.getDate()).padStart(2, '0')}`;
+        result.push({ date: dateStr, periods: [] });
+      }
+    }
+    currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+  }
+
+  tasks.forEach((task) => {
+    task.times.forEach(({ date, periods }) => {
+      const dateIndex = result.findIndex((day) => day.date === date);
+      if (dateIndex !== -1) {
+        result[dateIndex].periods.push(...periods);
+      }
+    });
+  });
+
+  result.forEach((day) => {
+    if (day.periods.length > 0) {
+      day.periods = processWorkPeriods(day.periods);
+    }
+  });
+
+  return result;
 }
 </script>
 
