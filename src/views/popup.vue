@@ -98,6 +98,9 @@
     </div>
   </div>
   <div class="main">
+    <!-- report -->
+    <SelectableInputCalendar v-model="reportYearMonth" separator="/" format="yyyyMM" class="flex" style="height: 2.5rem" />
+    <Button @click="getMonthlyWorkPeriods(_tasks, reportYearMonth.split('/')[0], reportYearMonth.split('/')[1])"></Button>
     <!-- Task Info -->
     <Panel v-if="_showBlock.taskEditor" :pt:root:style="taskBlockColor()" pt:header:style="padding: 0;" pt:content:style="padding: 18px;">
       <h2 v-if="_showBlock.taskEditor == 2" class="w-full">新增任務</h2>
@@ -444,8 +447,9 @@ import SelectableInputCalendar from '@/components/SelectableInputCalendar.vue';
 import Timeline from '@/components/Timeline.vue';
 import TimeInput from '@/components/TimeInput.vue';
 import PeriodInput from '@/components/PeriodInput.vue';
+import MonthReport from '@/components/MonthReport.vue';
 
-import { convertDateToString, isValidPage, sendTabMessage, setStorage, getStorage, deleteStorage, deepMerge, getBrowserType } from '../service/commonService';
+import { convertDateToString, isValidPage, sendTabMessage, setStorage, getStorage, deleteStorage, deepMerge, getBrowserType, addDays } from '@/service/commonService';
 
 onBeforeMount(() => {
   loadOptions();
@@ -862,64 +866,26 @@ const getWeekDates = (date) => {
   }
   return week;
 };
-const getMonthWeek = (date, month) => {
-  const d = new Date(date);
-  const targetYear = d.getFullYear();
 
-  const firstDayOfMonth = new Date(targetYear, month, 1);
-  const firstDayWeekDay = firstDayOfMonth.getDay();
+const getFormattedWeek = (mondayKey) => {
+  // 以週四為週數基準
+  const dateThursday = addDays(new Date(mondayKey), 3);
 
-  if (d.getDate() <= 7) {
-    const firstWeekMonday = new Date(firstDayOfMonth);
-    firstWeekMonday.setDate(firstDayOfMonth.getDate() - firstDayWeekDay + (firstDayWeekDay === 0 ? -6 : 1));
+  const year = dateThursday.getFullYear();
+  const month = dateThursday.getMonth() + 1;
+  const monthNames = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 
-    if (d.getMonth() === month && firstWeekMonday.getMonth() !== month) {
-      return 1;
-    }
-  }
+  const weekNumber = Math.ceil(dateThursday.getDate() / 7);
 
-  let firstWeekMonday = new Date(firstDayOfMonth);
-  if (firstDayWeekDay !== 1) {
-    const daysToAdd = firstDayWeekDay === 0 ? 1 : 8 - firstDayWeekDay;
-    firstWeekMonday.setDate(firstDayOfMonth.getDate() + daysToAdd - 7);
-  }
-
-  const currentMonday = new Date(d);
-  currentMonday.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1));
-
-  const diffTime = currentMonday.getTime() - firstWeekMonday.getTime();
-  const diffDays = Math.floor(diffTime / (24 * 60 * 60 * 1000));
-  const weekNum = Math.floor(diffDays / 7) + 1;
-
-  return weekNum;
+  return `${year}年 ${monthNames[month - 1]}月 第${weekNumber}週`;
 };
-const determineWeekMonth = (dates) => {
-  const counts = dates.reduce((acc, date) => {
-    const month = date.getMonth();
-    acc[month] = (acc[month] || 0) + 1;
-    return acc;
-  }, {});
 
-  const [month, count] = Object.entries(counts).reduce((max, entry) => (entry[1] > max[1] ? entry : max));
-
-  return Number(month);
-};
-const formatMonthWeek = (dates) => {
-  const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-  const weekDates = getWeekDates(dates[0]);
-  const weekMonth = determineWeekMonth(weekDates);
-  const year = weekDates[0].getFullYear();
-  const weekNumber = getMonthWeek(weekDates[0], weekMonth);
-  const month = monthNames[weekMonth];
-  const displayYear = weekMonth === 11 && weekDates[0].getMonth() === 0 ? year - 1 : year;
-  return `${displayYear}年 ${month} 第${weekNumber}週`;
-};
 const groupedTimelines = computed(() => {
   const grouped = {};
   sortedTimelines.value.forEach((timeline) => {
     const date = new Date(timeline.date);
     const weekDates = getWeekDates(date);
-    const key = weekDates[0].toISOString().split('T')[0];
+    const key = addDays(weekDates[0], 1).toISOString().split('T')[0];
 
     if (!grouped[key]) {
       grouped[key] = [];
@@ -928,10 +894,11 @@ const groupedTimelines = computed(() => {
   });
   return Object.entries(grouped).map(([key, value]) => ({
     weekKey: key,
-    formattedWeek: formatMonthWeek(value.map((v) => new Date(v.date))),
+    formattedWeek: getFormattedWeek(key),
     days: value
   }));
 });
+
 const sumWeekWorkTime = (week) => {
   let totalMinutes = 0;
 
@@ -1162,6 +1129,24 @@ const checkUnsaved = computed(() => {
     return false;
   }
 });
+
+const reportYearMonth = ref(convertDateToString(new Date(), 'yyyyMM', { yearOffset: 0, separator: '/' }));
+
+function getMonthlyWorkPeriods(tasks, year, month) {
+  const monthlyPeriods = [];
+
+  tasks.forEach((task) => {
+    task.times.forEach((time) => {
+      const [taskYear, taskMonth] = [time.date.split('/')[0], time.date.split('/')[1]];
+
+      if (taskYear === year && taskMonth === month) {
+        monthlyPeriods.push(...time.periods);
+      }
+    });
+  });
+  console.log(processWorkPeriods(monthlyPeriods));
+  // return processWorkPeriods(monthlyPeriods);
+}
 </script>
 
 <style scoped>

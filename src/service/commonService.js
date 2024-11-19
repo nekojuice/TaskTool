@@ -295,6 +295,19 @@ class CommonService {
       return 'Unknown';
     }
   };
+
+  /**
+   * JS DATE 物件 加減天數
+   * @param {Date} date
+   * @param {Int} days
+   * @returns Date
+   */
+  addDays = (date, days) => {
+    var result = new Date(date);
+    result.setDate(result.getDate() + days);
+
+    return result;
+  };
 }
 
 const commonService = new CommonService();
@@ -310,7 +323,8 @@ const getStorage = commonService.getStorage;
 const deleteStorage = commonService.deleteStorage;
 const delay = commonService.delay;
 const getBrowserType = commonService.getBrowserType;
+const addDays = commonService.addDays;
 
 export default new CommonService();
 
-export { isValidDateString, convertDateToString, convertStringToDate, deepMerge, isValidPage, deepCopy, sendTabMessage, setStorage, getStorage, deleteStorage, delay, getBrowserType };
+export { isValidDateString, convertDateToString, convertStringToDate, deepMerge, isValidPage, deepCopy, sendTabMessage, setStorage, getStorage, deleteStorage, delay, getBrowserType, addDays };
