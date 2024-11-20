@@ -1,6 +1,6 @@
 <template>
   <div :class="props.class">
-    <span class="flex p-inputtext p-0" style="border-radius: 4px 0 0 4px">
+    <span class="flex p-inputtext p-0" :style="props.displayButton ? `border-radius: 4px 0 0 4px` : ``">
       <input
         v-if="props.format.match(/y/g)?.length"
         v-model="inputYear"
@@ -11,7 +11,8 @@
         style="background-color: transparent"
         @input="onInput($event, 'y')"
         @change="onChange($event, 'y')"
-        @keydown="onKeydown($event, 'y')" />
+        @keydown="onKeydown($event, 'y')"
+        @wheel.prevent="onWheel($event, 'y')" />
       <span v-if="props.format.match(/y/g)?.length" class="align-self-center">{{ props.separator }}</span>
       <input
         v-if="props.format.match(/M/g)?.length"
@@ -23,7 +24,8 @@
         style="background-color: transparent"
         @input="onInput($event, 'M')"
         @change="onChange($event, 'M')"
-        @keydown="onKeydown($event, 'M')" />
+        @keydown="onKeydown($event, 'M')"
+        @wheel.prevent="onWheel($event, 'M')" />
       <span v-if="props.format.match(/d/g)?.length" class="align-self-center">{{ props.separator }}</span>
       <input
         v-if="props.format.match(/d/g)?.length"
@@ -35,9 +37,10 @@
         style="background-color: transparent"
         @input="onInput($event, 'd')"
         @change="onChange($event, 'd')"
-        @keydown="onKeydown($event, 'd')" />
+        @keydown="onKeydown($event, 'd')"
+        @wheel.prevent="onWheel($event, 'd')" />
     </span>
-    <DatePicker v-model="dateObject" :disabled="props.disabled" showIcon :view="props.view" inputClass="hidden" />
+    <DatePicker v-if="displayButton" v-model="dateObject" :disabled="props.disabled" showIcon :view="props.view" inputClass="hidden" />
     <Button v-if="props.nullable" icon="pi pi-times" severity="danger" text rounded aria-label="Cancel" @click="emit('update:modelValue', '')" />
   </div>
 </template>
@@ -55,6 +58,8 @@ const props = defineProps({
   disabled: { type: Boolean, default: false },
   // 是否可回傳空字串
   nullable: { type: Boolean, default: false },
+  // 是否顯示日曆按鈕
+  displayButton: { type: Boolean, default: true },
   // DatePicker 屬性傳遞
   view: { type: String, default: 'date' },
 
@@ -134,6 +139,18 @@ const onKeydown = (event, field) => {
     onChange(event, field);
   }
   if (event.key === 'ArrowDown') {
+    event.target.value = +event.target.value - 1;
+
+    onChange(event, field);
+  }
+};
+
+const onWheel = (event, field) => {
+  if (event.deltaY < 0) {
+    event.target.value = +event.target.value + 1;
+
+    onChange(event, field);
+  } else if (event.deltaY > 0) {
     event.target.value = +event.target.value - 1;
 
     onChange(event, field);

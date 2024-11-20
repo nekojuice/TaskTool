@@ -419,16 +419,24 @@
     </Dialog>
 
     <!-- report -->
-    <Dialog v-model:visible="showReport" header="月報" :style="{ width: '90%', height: '90%' }" :modal="true" :draggable="false">
+    <Dialog v-model:visible="showReport" header="月報" style="width: 100%; height: 100%; margin-left: 96px" :pt="{ root: 'p-dialog-maximized' }" :modal="false" :draggable="false">
       <div class="flex">
-        <SelectableInputCalendar v-model="reportYearMonth" separator="/" format="yyyyMM" class="flex mr-2" style="height: 2.5rem" />
+        <SelectableInputCalendar v-model="reportYearMonth" separator="/" format="yyyyMM" class="flex mr-2" style="height: 2.5rem" :displayButton="false" />
         <Button class="flex mr-2" label="自然月" @click="reportData = getMonthlyWorkPeriods(_tasks, +reportYearMonth.split('/')[0], +reportYearMonth.split('/')[1])"></Button>
-        <Button class="flex" label="工作週" @click="reportData = getMonthlyWorkPeriods2(_tasks, +reportYearMonth.split('/')[0], +reportYearMonth.split('/')[1])"></Button>
+        <Button class="flex mr-2" label="工作週" @click="reportData = getMonthlyWorkPeriods2(_tasks, +reportYearMonth.split('/')[0], +reportYearMonth.split('/')[1])"></Button>
+        <div class="flex mr-2 align-content-center">
+          <ToggleSwitch class="flex mr-2 align-self-center" v-model="reportShowWeekend" />
+          <label class="flex mr-2 align-items-center justify-content-center">顯示週末</label>
+        </div>
+        <div v-if="reportData">
+          <span class="mr-2">總時數 {{ calculateTimePercent.workTime }} / {{ calculateTimePercent.totalTime }} ({{ calculateTimePercent.percentage }} %)</span> <br />
+          <span class="mr-2">effort {{ calculateTimePercent.workEffort }} / {{ calculateTimePercent.totalEffort }}</span>
+        </div>
       </div>
 
       <div v-if="reportData">
         <Timeline
-          v-for="day in reportData"
+          v-for="day in filteredReportData"
           :date="day.date"
           :workTime="day.periods"
           :restTime="getRestPeriods()"
@@ -1212,6 +1220,43 @@ function getMonthlyWorkPeriods2(tasks, year, month) {
 
   return result;
 }
+
+const filteredReportData = computed(() => (reportShowWeekend.value ? reportData.value || [] : (reportData.value || []).filter(({ date }) => ![0, 6].includes(new Date(date).getDay()))));
+const calculateTimePercent = computed(() => {
+  if (!filteredReportData.value || filteredReportData.value.length === 0) {
+    return 0;
+  }
+
+  const totalDays = filteredReportData.value.length;
+
+  const restPeriodsArray = getRestPeriods();
+  const dailyRestMinutes = restPeriodsArray.reduce((total, period) => {
+    return total + (period[1] - period[0]);
+  }, 0);
+
+  const denominator = (1440 - dailyRestMinutes) * totalDays;
+
+  const totalWorkMinutes = filteredReportData.value.reduce((total, dayData) => {
+    if (!dayData.periods || dayData.periods.length === 0) {
+      return total;
+    }
+
+    const dayMinutes = dayData.periods.reduce((dayTotal, period) => {
+      return dayTotal + (period[1] - period[0]);
+    }, 0);
+
+    return total + dayMinutes;
+  }, 0);
+
+  const percentage = (totalWorkMinutes / denominator) * 100;
+  return {
+    percentage: Math.round(percentage * 100) / 100,
+    workTime: `${Math.floor(totalWorkMinutes / 60)}:${totalWorkMinutes % 60}`,
+    workEffort: Math.ceil(totalWorkMinutes / 60) * 0.125,
+    totalTime: `${Math.floor(denominator / 60)}`,
+    totalEffort: Math.ceil(denominator / 60) * 0.125
+  };
+});
 </script>
 
 <style scoped>
