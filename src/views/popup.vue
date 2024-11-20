@@ -40,6 +40,13 @@
         @click="[(_showBlock.timeEditor = !_showBlock.timeEditor), saveCache()]" />
       <div class="h-1rem w-2rem"></div>
       <Button
+        v-tooltip="'篩選資料'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-filter"
+        severity="danger"
+        :outlined="!_showBlock.filterBlock"
+        @click="[(_showBlock.filterBlock = !_showBlock.filterBlock), saveCache()]" />
+      <Button
         v-tooltip="'顯示刪除按鈕'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-unlock"
@@ -205,12 +212,26 @@
           @periodEditorData="(data) => periodEditorLoadPeriod(data)" />
       </div>
     </Panel>
+    <!-- filter Block -->
+    <Panel v-if="_showBlock.filterBlock" pt:header:style="padding: 0;" pt:content:style="padding: 18px;">
+      <div class="flex align-content-center">
+        <span class="flex align-self-center align-items-center justify-content-center mr-2">篩選日期</span>
+        <SelectableInputCalendar
+          v-model="_optionsData.filterMonth"
+          separator="/"
+          format="yyyyMM"
+          class="flex align-self-center align-items-center justify-content-center"
+          style="height: 2.5rem"
+          :displayButton="false" />
+      </div>
+    </Panel>
+
     <!-- Tasks List and Data -->
     <ConfirmDialog group="deleteTask"></ConfirmDialog>
     <div class="scrollTarget">
       <div class="custom-grid">
         <div v-if="_showBlock.taskListBlockPin" class="custom-col-8">
-          <DataTable :value="_tasks" @rowReorder="onRowReorder($event)" dataKey="id">
+          <DataTable :value="filteredTaskList" @rowReorder="onRowReorder($event)" dataKey="id">
             <Column rowReorder class="pr-0" style="width: 36px; max-width: 36px" />
             <Column v-if="_showBlock.debugBlock" header="#" class="w-1 white-space-nowrap">
               <template #body="slotProps">
@@ -241,9 +262,11 @@
             <h3 class="font-bold" style="max-width: 178px">{{ _data.taskHeader }}</h3>
           </Tag>
           <br />
+
           <span v-if="!sortedTimelines.length">此任務沒有時數紀錄</span>
+          <span v-else-if="!filteredGroupedTimelines.length">此過濾條件沒有結果</span>
           <div class="grouped-timeline">
-            <div v-for="week in groupedTimelines" :key="week.weekKey" class="mt-2">
+            <div v-for="week in filteredGroupedTimelines" :key="week.weekKey" class="mt-2">
               <Tag :value="week.formattedWeek + ` [${sumWeekWorkTime(week)}]`"></Tag>
               <div>
                 <Timeline
@@ -506,12 +529,14 @@ const _showBlock = ref({
   timeEditor: false,
   debugBlock: false,
   deleteMode: false,
-  taskListBlockPin: false
+  taskListBlockPin: false,
+  filterBlock: false
 });
 const _optionsData = ref({
   defaultOpenMode: 'popup',
   tempOpenMode: '',
-  restTime: { workOn: 510, lunch: [710, 800], workOff: 1080, hideNotWorking: false, enableWorkOn: false, enableWorkOff: false, enableLunch: true }
+  restTime: { workOn: 510, lunch: [710, 800], workOff: 1080, hideNotWorking: false, enableWorkOn: false, enableWorkOff: false, enableLunch: true },
+  filterMonth: convertDateToString(new Date(), 'yyyyMM', { separator: '/' })
 });
 const defaultOpenModeMessage = ref('');
 const showOptions = ref(false);
@@ -908,11 +933,55 @@ const groupedTimelines = computed(() => {
     }
     grouped[key].push(timeline);
   });
+
   return Object.entries(grouped).map(([key, value]) => ({
     weekKey: key,
     formattedWeek: getFormattedWeek(key),
     days: value
   }));
+});
+
+const filteredTaskList = computed(() => {
+  if (!_tasks.value) {
+    return [];
+  }
+
+  if (!_optionsData.value.filterMonth || !_showBlock.value.filterBlock) {
+    return _tasks.value;
+  }
+
+  const [filterYear, filterMonth] = _optionsData.value.filterMonth.split('/');
+  const filterYearMonth = `${filterYear}/${filterMonth.padStart(2, '0')}`;
+
+  return _tasks.value
+    .map((task) => {
+      const filteredTimes = task.times.filter((timeRecord) => {
+        const recordYearMonth = timeRecord.date.substring(0, 7);
+        return recordYearMonth === filterYearMonth;
+      });
+
+      return {
+        ...task,
+        times: filteredTimes
+      };
+    })
+    .filter((task) => task.times.length > 0);
+});
+
+const filteredGroupedTimelines = computed(() => {
+  if (!_optionsData.value.filterMonth || !_showBlock.value.filterBlock) {
+    return groupedTimelines.value;
+  }
+
+  const [filterYear, filterMonth] = _optionsData.value.filterMonth.split('/').map(Number);
+
+  return groupedTimelines.value.filter((weekGroup) => {
+    const dateThursday = addDays(new Date(weekGroup.weekKey), 3);
+    const thursdayYear = dateThursday.getFullYear();
+    const thursdayMonth = dateThursday.getMonth() + 1;
+
+    return thursdayYear === filterYear && thursdayMonth === Number(filterMonth);
+  });
 });
 
 const sumWeekWorkTime = (week) => {
