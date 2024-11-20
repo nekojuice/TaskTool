@@ -1,7 +1,7 @@
 const _optionsData = {
   defaultOpenMode: 'popup',
   tempOpenMode: '',
-  restTime: { workOn: 510, lunch: [710, 800], workOff: 1110, hideNotWorking: false, enableWorkOn: false, enableWorkOff: false, enableLunch: true }
+  restTime: { workOn: 510, lunch: [710, 800], workOff: 1080, hideNotWorking: false, enableWorkOn: false, enableWorkOff: false, enableLunch: true }
 };
 
 chrome.action.onClicked.addListener(async (tab) => {

@@ -511,7 +511,7 @@ const _showBlock = ref({
 const _optionsData = ref({
   defaultOpenMode: 'popup',
   tempOpenMode: '',
-  restTime: { workOn: 510, lunch: [710, 800], workOff: 1110, hideNotWorking: false, enableWorkOn: false, enableWorkOff: false, enableLunch: true }
+  restTime: { workOn: 510, lunch: [710, 800], workOff: 1080, hideNotWorking: false, enableWorkOn: false, enableWorkOff: false, enableLunch: true }
 });
 const defaultOpenModeMessage = ref('');
 const showOptions = ref(false);
