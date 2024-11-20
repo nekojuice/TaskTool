@@ -64,7 +64,6 @@
         severity="secondary"
         outlined
         @click="
-          _optionsData.hasExecutedOpenMode = true;
           saveOptions();
           openInNewTab('/index.html');
         " />
@@ -75,7 +74,6 @@
         severity="secondary"
         outlined
         @click="
-          _optionsData.hasExecutedOpenMode = true;
           saveOptions();
           openInNewWindow('/index.html');
         " />
@@ -320,26 +318,25 @@
             inputId="defaultOpenMode.popup"
             name="defaultOpenMode"
             value="popup"
-            @change="[saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
+            @change="[(_optionsData.tempOpenMode = ''), saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
           <label for="defaultOpenMode.popup">懸浮小窗</label>
         </div>
-        <!-- 側邊欄無法由code打開 -->
-        <!-- <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2">
           <RadioButton
             v-model="_optionsData.defaultOpenMode"
             inputId="defaultOpenMode.sidePanel"
             name="defaultOpenMode"
             value="sidePanel"
-            @change="[saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
+            @change="[(_optionsData.tempOpenMode = 'sidePanel'), saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
           <label for="defaultOpenMode.sidePanel">側邊欄</label>
-        </div> -->
+        </div>
         <div class="flex items-center gap-2">
           <RadioButton
             v-model="_optionsData.defaultOpenMode"
             inputId="defaultOpenMode.newTab"
             name="defaultOpenMode"
             value="newTab"
-            @change="[saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
+            @change="[(_optionsData.tempOpenMode = ''), saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
           <label for="defaultOpenMode.newTab">新分頁</label>
         </div>
         <div class="flex items-center gap-2">
@@ -348,7 +345,7 @@
             inputId="defaultOpenMode.newWindow"
             name="defaultOpenMode"
             value="newWindow"
-            @change="[saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
+            @change="[(_optionsData.tempOpenMode = ''), saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
           <label for="defaultOpenMode.newWindow">新視窗(800×600)</label>
         </div>
         <div class="flex items-center gap-2">
@@ -357,7 +354,7 @@
             inputId="defaultOpenMode.newWindow_maximized"
             name="defaultOpenMode"
             value="newWindow_maximized"
-            @change="[saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
+            @change="[(_optionsData.tempOpenMode = ''), saveOptions(), (defaultOpenModeMessage = '將改變下次開啟方式')]" />
           <label for="defaultOpenMode.newWindow_maximized">新視窗(視窗最大化)</label>
         </div>
       </div>
@@ -430,7 +427,6 @@
       </div>
 
       <div v-if="reportData">
-        <span v-if="!sortedTimelines.length">此任務沒有時數紀錄</span>
         <Timeline
           v-for="day in reportData"
           :date="day.date"
@@ -439,7 +435,7 @@
           :displayStartTime="_optionsData.restTime && _optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
           :displayEndTime="_optionsData.restTime && _optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
           :showDateAndSum="true"
-          :class="(day.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }) ? 'orangeBackground' : '')" />
+          :class="day.date == convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }) ? 'orangeBackground' : ''" />
       </div>
     </Dialog>
   </div>
@@ -468,7 +464,6 @@ import SelectableInputCalendar from '@/components/SelectableInputCalendar.vue';
 import Timeline from '@/components/Timeline.vue';
 import TimeInput from '@/components/TimeInput.vue';
 import PeriodInput from '@/components/PeriodInput.vue';
-import MonthReport from '@/components/MonthReport.vue';
 
 import { convertDateToString, isValidPage, sendTabMessage, setStorage, getStorage, deleteStorage, deepMerge, getBrowserType, addDays } from '@/service/commonService';
 
@@ -515,6 +510,7 @@ const showOptions = ref(false);
 const showTaskListDrawer = ref(false);
 const showReport = ref(false);
 const reportData = ref();
+const reportShowWeekend = ref(false);
 const isSidePanel = ref(false);
 const periodEditorData = ref({
   showPeriodEditor: false,
@@ -580,18 +576,21 @@ const openInSidePanel = async () => {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
 
   if (isSidePanel.value) {
-    window.close();
-  }
-
-  _optionsData.value.tempOpenMode = 'sidePanel';
-  await saveOptions();
-  await chrome.sidePanel.open({ tabId: tabs[0].id, windowId: currentWindow.id });
-
-  if (getBrowserType() == 'Chrome') {
+    _optionsData.value.tempOpenMode = '';
+    await saveOptions();
     window.close();
   } else {
-    _optionsData.value.tempOpenMode = '';
-    saveOptions();
+    _optionsData.value.tempOpenMode = 'sidePanel';
+    await saveOptions();
+    await chrome.sidePanel.open({ tabId: tabs[0].id, windowId: currentWindow.id });
+
+    if (getBrowserType() == 'Chrome') {
+      window.close();
+    } else {
+      // edge
+      _optionsData.value.tempOpenMode = '';
+      saveOptions();
+    }
   }
 };
 
@@ -604,42 +603,28 @@ const loadOptions = async () => {
   executeDefaultOpenMode();
 };
 const executeDefaultOpenMode = () => {
-  if (_optionsData.value.hasExecutedOpenMode) {
-    _optionsData.value.hasExecutedOpenMode = false;
-    saveOptions();
-    return;
-  }
-
   if (_optionsData.value.tempOpenMode === 'sidePanel') {
     _optionsData.value.tempOpenMode = '';
     isSidePanel.value = true;
     saveOptions();
     return;
   }
-  if (_optionsData.value.defaultOpenMode === 'popup') {
-    document.body.style.width = '800px';
-    document.body.style.height = '600px';
-    document.body.style.overflow = 'hidden';
-    const app = document.getElementById('app');
-    app.style.width = '800px';
-    app.style.height = '600px';
-    return;
-  }
-  if (_optionsData.value.defaultOpenMode === 'newTab') {
-    openInNewTab('/index.html');
-    window.close();
-  }
-  if (_optionsData.value.defaultOpenMode === 'newWindow') {
-    openInNewWindow('/index.html');
-    window.close();
-  }
-  if (_optionsData.value.defaultOpenMode === 'newWindow_maximized') {
-    openInNewWindow('/index.html', undefined, undefined, true);
-    window.close();
-  }
 
-  _optionsData.value.hasExecutedOpenMode = true;
-  saveOptions();
+  switch (_optionsData.value.defaultOpenMode) {
+    case 'popup':
+      document.body.style.width = '800px';
+      document.body.style.height = '600px';
+      document.body.style.overflow = 'hidden';
+      const app = document.getElementById('app');
+      app.style.width = '800px';
+      app.style.height = '600px';
+      break;
+    case 'sidePanel':
+      isSidePanel.value = true;
+      break;
+    default:
+      break;
+  }
 };
 
 const newTaskRestoreTempID = ref(-1);
