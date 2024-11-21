@@ -71,6 +71,7 @@
         severity="secondary"
         outlined
         @click="
+          _optionsData.tempOpenMode = 'newTab';
           saveOptions();
           openInNewTab('/index.html');
         " />
@@ -81,6 +82,7 @@
         severity="secondary"
         outlined
         @click="
+          _optionsData.tempOpenMode = 'newWindow';
           saveOptions();
           openInNewWindow('/index.html');
         " />
@@ -640,11 +642,17 @@ const loadOptions = async () => {
   executeDefaultOpenMode();
 };
 const executeDefaultOpenMode = () => {
-  if (_optionsData.value.tempOpenMode === 'sidePanel') {
-    _optionsData.value.tempOpenMode = '';
-    isSidePanel.value = true;
-    saveOptions();
-    return;
+  switch (_optionsData.value.tempOpenMode) {
+    case 'sidePanel':
+      isSidePanel.value = true;
+    case 'newTab':
+    case 'newWindow':
+      _optionsData.value.tempOpenMode = '';
+      saveOptions();
+
+      return;
+    default:
+      break;
   }
 
   switch (_optionsData.value.defaultOpenMode) {
