@@ -764,7 +764,7 @@ const saveTaskInfo = () => {
   if (index !== -1) {
     _tasks.value[index] = { ..._data.value };
   } else {
-    _tasks.value.push({ ..._data.value });
+    _tasks.value.unshift({ ..._data.value });
   }
 
   if (_showBlock.value.taskEditor == 2) {
@@ -1212,7 +1212,7 @@ function deleteDate(rowdate) {
 const handleKeydown = (event) => {
   if (event.ctrlKey && event.key === 's') {
     event.preventDefault();
-    
+
     if (showOptions.value) {
       downloadOnClick();
     } else if (_showBlock.value.taskEditor && _data.value.taskHeader?.trim()) {
