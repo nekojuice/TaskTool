@@ -1,14 +1,6 @@
 <template>
   <span>
-    <input
-      type="number"
-      v-model.number="inputHour"
-      @input="validateHourInput"
-      @wheel.prevent="adjustHourByWheel"
-      @keydown="handleHourKeydown"
-      class="w-2rem"
-      :style="inputStyle"
-      @change="inputUpdateTickData()" />
+    <input type="number" v-model.number="inputHour" @input="validateHourInput" @wheel.prevent="adjustHourByWheel" class="w-2rem" :style="inputStyle" @change="inputUpdateTickData()" />
     :
     <input
       type="number"
@@ -118,34 +110,26 @@ const adjustMinuteByWheel = (event) => {
   inputUpdateTickData();
 };
 
-const handleHourKeydown = (event) => {
-  if (event.key === 'ArrowUp' && inputHour.value < 24) {
-    inputHour.value++;
-    inputUpdateTickData();
-  } else if (event.key === 'ArrowDown' && inputHour.value > 0) {
-    inputHour.value--;
-    inputUpdateTickData();
-  }
-};
-
 const handleMinuteKeydown = (event) => {
   if (event.key === 'ArrowUp') {
     if (inputMinute.value === 59) {
       inputMinute.value = 0;
-      if (inputHour.value < 24) inputHour.value++;
-    } else {
-      inputMinute.value++;
+      if (inputHour.value < 24) {
+        inputHour.value++;
+      }
     }
+
     inputUpdateTickData();
   } else if (event.key === 'ArrowDown') {
     if (inputHour.value === 0 && inputMinute.value === 0) return;
 
     if (inputMinute.value === 0) {
       inputMinute.value = 59;
-      if (inputHour.value > 0) inputHour.value--;
-    } else {
-      inputMinute.value--;
+      if (inputHour.value > 0) {
+        inputHour.value--;
+      }
     }
+
     inputUpdateTickData();
   }
 };

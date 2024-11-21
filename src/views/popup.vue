@@ -404,7 +404,11 @@
         :displayEndTime="_optionsData.restTime && _optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
         :showScale="true" />
       <h3 class="font-bold mt-4">
-        資料備份與上傳 <span v-tooltip.top="'資料儲存於local storage\n- 上傳會覆蓋所有資料\n- 資料僅儲存於本機\n- 不同瀏覽器資料獨立'" class="pi pi-info-circle text-sm align-self-center" style="color: lightblue"></span>
+        資料備份與上傳
+        <span
+          v-tooltip.top="'資料儲存於local storage\n- 上傳會覆蓋所有資料\n- 資料僅儲存於本機\n- 不同瀏覽器資料獨立'"
+          class="pi pi-info-circle text-sm align-self-center"
+          style="color: lightblue"></span>
       </h3>
       <div class="flex flex-row">
         <FileUpload
@@ -1208,7 +1212,12 @@ function deleteDate(rowdate) {
 const handleKeydown = (event) => {
   if (event.ctrlKey && event.key === 's') {
     event.preventDefault();
-    downloadOnClick();
+    
+    if (showOptions.value) {
+      downloadOnClick();
+    } else if (_showBlock.value.taskEditor && _data.value.taskHeader?.trim()) {
+      saveTaskInfo();
+    }
   }
 };
 
