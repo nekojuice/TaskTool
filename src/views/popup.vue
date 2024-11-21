@@ -508,6 +508,7 @@ onMounted(() => {
   loadCache();
   loadTasks();
   window.addEventListener('keydown', handleKeydown);
+  initPeriodDefault();
 });
 
 onUnmounted(() => {
@@ -525,7 +526,7 @@ const _data = ref({
   times: []
 });
 const _time = ref({ date: convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }), periods: [] });
-const _period = ref([new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()]);
+const _period = ref([0, 0]);
 const _showBlock = ref({
   taskEditor: 2,
   timeEditor: false,
@@ -787,6 +788,27 @@ const saveTime = () => {
 
   saveTasks();
   saveCache();
+};
+
+const initPeriodDefault = async () => {
+  const option = (await getStorage('optionsData')) || _optionsData.value;
+  const now = new Date().getHours() * 60 + new Date().getMinutes();
+  let start = now - 60;
+  let end = now;
+
+  if (option.restTime.hideNotWorking) {
+    if (option.restTime.enableWorkOn && start < option.restTime.workOn) {
+      start = +option.restTime.workOn;
+      end = +option.restTime.workOn + 60;
+    }
+
+    if (option.restTime.enableWorkOff && option.restTime.workOff < end) {
+      end = +option.restTime.workOff;
+      start = +option.restTime.workOff - 60;
+    }
+  }
+
+  _period.value = [start, end];
 };
 
 const getRestPeriods = () => {
