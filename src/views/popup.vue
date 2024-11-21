@@ -57,14 +57,6 @@
       <Button v-tooltip="'月報'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-calendar" severity="help" :outlined="!showReport" @click="showReport = !showReport" />
       <div class="h-1rem w-2rem"></div>
       <Button
-        v-tooltip="'選項'"
-        class="h-2rem w-2rem flex align-items-center justify-content-center"
-        icon="pi pi-cog"
-        severity="secondary"
-        :outlined="true"
-        :style="showOptions ? 'background-color: lightgray;' : ''"
-        @click="showOptions = !showOptions" />
-      <Button
         v-tooltip="'在瀏覽器新分頁開啟'"
         class="h-2rem w-2rem flex align-items-center justify-content-center"
         icon="pi pi-tag"
@@ -95,15 +87,14 @@
         @click="openInSidePanel('/index.html')"
         :style="isSidePanel ? 'background-color: lightgray;' : ''" />
       <div class="h-1rem w-2rem"></div>
-    </div>
-    <!-- debugblock -->
-    <div v-if="_showBlock.debugBlock" class="w-2rem flex justify-content-center align-content-end flex-wrap">
-      <Button v-tooltip="'DEBUG, all tasks and cache'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="A" outlined @click="showStorageData()" />
-      <Button v-tooltip="'DEBUG, current data'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="D" outlined @click="console.log('data', _data)" />
-      <Button v-tooltip="'DEBUG, current data all times'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="T" outlined @click="console.log('time', _time)" />
-      <Button v-tooltip="'DEBUG, current period'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="P" outlined @click="console.log('period', _period)" />
-      <Button v-tooltip="'DEBUG, current optionsData'" class="h-2rem w-2rem flex align-items-center justify-content-center" label="O" outlined @click="console.log('optionsData', _optionsData)" />
-      <Button v-tooltip="'⚠️刪除所有資料'" class="h-2rem w-2rem flex align-items-center justify-content-center" icon="pi pi-trash" severity="danger" outlined @click="deleteAllData()" />
+      <Button
+        v-tooltip="'選項'"
+        class="h-2rem w-2rem flex align-items-center justify-content-center"
+        icon="pi pi-cog"
+        severity="secondary"
+        :outlined="true"
+        :style="showOptions ? 'background-color: lightgray;' : ''"
+        @click="showOptions = !showOptions" />
     </div>
   </div>
   <div class="main">
@@ -412,17 +403,10 @@
         :displayStartTime="_optionsData.restTime && _optionsData.restTime.enableWorkOn && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOn : 0"
         :displayEndTime="_optionsData.restTime && _optionsData.restTime.enableWorkOff && _optionsData.restTime.hideNotWorking ? _optionsData.restTime.workOff : 1440"
         :showScale="true" />
-      <h3 class="font-bold mt-4">其他</h3>
+      <h3 class="font-bold mt-4">
+        資料備份與上傳 <span v-tooltip.top="'資料儲存於local storage\n- 上傳會覆蓋所有資料\n- 資料僅儲存於本機\n- 不同瀏覽器資料獨立'" class="pi pi-info-circle text-sm align-self-center" style="color: lightblue"></span>
+      </h3>
       <div class="flex flex-row">
-        <Button
-          v-tooltip.top="'開啟debug模式'"
-          class="h-2rem w-2rem flex"
-          icon="pi pi-ellipsis-v"
-          severity="secondary"
-          :outlined="true"
-          :style="_showBlock.debugBlock ? 'background-color: lightgray;' : ''"
-          @click="_showBlock.debugBlock = !_showBlock.debugBlock" />
-        <div class="h-2rem w-1rem flex"></div>
         <FileUpload
           v-tooltip.top="'上傳並覆蓋資料'"
           name="demo[]"
@@ -437,6 +421,28 @@
         </FileUpload>
         <Button v-tooltip.top="'下載資料(ctrl + s)'" class="h-2rem w-2rem flex" icon="pi pi-download" severity="danger" outlined @click="downloadOnClick()" />
         <a id="downloadAnchorElem" style="display: none" :href="datatable" download="launch.json"></a>
+      </div>
+      <h3 class="font-bold mt-4">DEBUG</h3>
+      <div class="flex flex-row mt-2">
+        <Button
+          v-tooltip.top="'開啟debug模式'"
+          class="h-2rem w-2rem flex"
+          icon="pi pi-ellipsis-v"
+          severity="secondary"
+          :outlined="true"
+          :style="_showBlock.debugBlock ? 'background-color: lightgray;' : ''"
+          @click="_showBlock.debugBlock = !_showBlock.debugBlock" />
+        <div class="h-2rem w-1rem flex"></div>
+        <span v-if="_showBlock.debugBlock" class="flex">
+          <Button v-tooltip.top="'DEBUG, clg all tasks and cache'" class="h-2rem w-2rem flex" label="A" outlined @click="showStorageData()" />
+          <Button v-tooltip.top="'DEBUG, clg data'" class="h-2rem w-2rem flex" label="D" outlined @click="console.log('data', _data)" />
+          <Button v-tooltip.top="'DEBUG, clg data all times'" class="h-2rem w-2rem flex" label="T" outlined @click="console.log('time', _time)" />
+          <Button v-tooltip.top="'DEBUG, clg period'" class="h-2rem w-2rem flex" label="P" outlined @click="console.log('period', _period)" />
+          <Button v-tooltip.top="'DEBUG, clg optionsData'" class="h-2rem w-2rem flex" label="O" outlined @click="console.log('optionsData', _optionsData)" />
+          <div class="h-2rem w-1rem flex"></div>
+          <Button v-tooltip.focus="'重新開啟擴充功能以重新整理設定檔'" class="flex h-2rem w-7rem mr-1" icon="pi pi-trash" severity="danger" @click="deleteAllData()">⚠️清空資料</Button>
+          <span v-tooltip.top="'如要保留資料\n可進行下載備份'" class="pi pi-info-circle text-sm align-self-center" style="color: lightblue"></span>
+        </span>
       </div>
       <div class="h-1rem w-2rem"></div>
       <h3 class="font-bold mt-4">刪除設定檔</h3>
