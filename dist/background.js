@@ -5,8 +5,7 @@ const _optionsData = {
 };
 
 chrome.action.onClicked.addListener(async (tab) => {
-  const { optionsData } = await chrome.storage.local.get('optionsData');
-  _optionsData.value = optionsData || _optionsData;
+  _optionsData.value = (await chrome.storage.local.get('optionsData'))?.optionsData || _optionsData;
 
   switch (_optionsData.value.defaultOpenMode) {
     case 'newTab':
@@ -47,7 +46,6 @@ function openInNewWindow(width = 800, height = 600, maximized = false) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'setStorage') {
     chrome.storage.local.set(message.obj, () => {
-
       // 側邊欄開啟 設定方法不同
       if (Object.keys(message.obj)[0] == 'optionsData' && message.obj?.optionsData.defaultOpenMode == 'sidePanel') {
         chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });

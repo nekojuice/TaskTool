@@ -525,11 +525,11 @@ const _data = ref({
 const _time = ref({ date: convertDateToString(new Date(), 'yyyyMMdd', { separator: '/' }), periods: [] });
 const _period = ref([new Date().getHours() * 60 + new Date().getMinutes() - 60, new Date().getHours() * 60 + new Date().getMinutes()]);
 const _showBlock = ref({
-  taskEditor: 0,
+  taskEditor: 2,
   timeEditor: false,
   debugBlock: false,
   deleteMode: false,
-  taskListBlockPin: false,
+  taskListBlockPin: true,
   filterBlock: false
 });
 const _optionsData = ref({
@@ -632,7 +632,11 @@ const saveOptions = async () => {
 };
 
 const loadOptions = async () => {
-  _optionsData.value = deepMerge(_optionsData.value, await getStorage('optionsData'));
+  const result = await getStorage('optionsData');
+  if (result) {
+    _optionsData.value = deepMerge(_optionsData.value, result);
+  }
+
   executeDefaultOpenMode();
 };
 const executeDefaultOpenMode = () => {
